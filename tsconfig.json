@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+		"outDir":".",
+		"allowJs":true
+	},
+	"include":[
+	"src/**/*"
+	],
+	"exclude":[
+	"node_modules",
+	"lib"
+	]
+}
