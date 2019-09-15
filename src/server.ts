@@ -1,7 +1,7 @@
 import NodeMediaServer = require("node-media-server");
 import fs = require ("fs");
 const { exec } = require('child_process');
-const ircd = require("./lib/ircdjs/lib/server.js").Server;
+const ircd = require("./lib/IRCDjs-six/lib/server.js").Server;
 
 //initialize configs, eventually grab from runtime config file
 const mediaconfig = {

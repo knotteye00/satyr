@@ -3,7 +3,7 @@ exports.__esModule = true;
 var NodeMediaServer = require("node-media-server");
 var fs = require("fs");
 var exec = require('child_process').exec;
-var ircd = require("./lib/ircdjs/lib/server.js").Server;
+var ircd = require("./lib/IRCDjs-six/lib/server.js").Server;
 //initialize configs, eventually grab from runtime config file
 var mediaconfig = {
     rtmp: {
@@ -87,7 +87,6 @@ nms.on('postPublish', function (id, StreamPath, args) {
             if (err)
                 throw err;
         });
-        //we kinda stanitize it in prePublish? :blobshrug:
         var subprocess = exec('ffmpeg -i rtmp://127.0.0.1' + StreamPath + ' -vcodec copy -acodec copy ./media' + StreamPath + '/$(date +%d%b%Y-%H%M).mp4', {
             detached: true,
             stdio: 'inherit'
