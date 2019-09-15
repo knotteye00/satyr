@@ -1,4 +1,6 @@
 import NodeMediaServer = require("node-media-server");
+import fs = require ("fs");
+const { exec } = require('child_process');
 const ircd = require("./lib/ircdjs/lib/server.js").Server;
 
 //initialize configs, eventually grab from runtime config file
@@ -12,7 +14,18 @@ const mediaconfig = {
 	},
 	http: {
 		port:8000,
-		allow_origin: '*'
+		allow_origin: '*',
+		mediaroot: './media'
+	},
+	trans: {
+		ffmpeg: '/usr/bin/ffmpeg',
+		tasks: [
+			{
+				app: 'live',
+				hls: 'true',
+				hlsFlags: '[hls_time=2:hls_list_size=3:hls_flags=delete_segments]'
+			}
+		]
 	}
 };
 
@@ -68,4 +81,23 @@ nms.on('prePublish', (id, StreamPath, args) => {
 	}
 	console.log("[NodeMediaServer] Stream key ok.");
 	session.publishStreamPath = "/live/amy";
+});
+
+nms.on('postPublish', (id, StreamPath, args) => {
+	console.log('[NodeMediaServer] Checking record flag for ', `id=${id} StreamPath=${StreamPath}`);
+	//Hook up to postgres DB.
+	if(true){
+		console.log('[NodeMediaServer] Initiating recording for ', `id=${id} StreamPath=${StreamPath}`);
+		fs.mkdir('./media'+StreamPath, { recursive : true }, (err) => {
+			if (err) throw err;
+		});
+		let subprocess = exec('ffmpeg -i rtmp://127.0.0.1'+StreamPath+' -vcodec copy -acodec copy ./media'+StreamPath+'/$(date +%d%b%Y-%H%M).mp4',{
+			detached : true,
+			stdio : 'inherit'
+		});
+		subprocess.unref();
+		//spawn an ffmpeg process to record the stream, then detach it completely
+		return true;
+	}
+	console.log('[NodeMediaServer] Skipping recording for ', `id=${id} StreamPath=${StreamPath}`);
 });
