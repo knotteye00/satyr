@@ -1,7 +1,6 @@
-import NodeMediaServer = require("node-media-server");
-import fs = require ("fs");
+import NodeMediaServer = require('node-media-server');
+import fs = require('fs');
 const { exec } = require('child_process');
-const ircd = require("./lib/IRCDjs-six/lib/server.js").Server;
 
 //initialize configs, eventually grab from runtime config file
 const mediaconfig = {
@@ -51,10 +50,9 @@ function streamAuth(path: string){
 }
 
 
-var nms = new NodeMediaServer(mediaconfig);
+const nms = new NodeMediaServer(mediaconfig);
 
 nms.run();
-ircd.boot();
 
 nms.on('prePublish', (id, StreamPath, args) => {
 	console.log("[NodeMediaServer] Prepublish Hook for stream id=",id);

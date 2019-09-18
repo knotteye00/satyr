@@ -1,0 +1,13 @@
+Satyr: A livestreaming server
+
+System dependencies: npm, node, typescript
+(Typescript can be installed through npm)
+
+Build Instructions
+	git clone https://gitlab.com/knotteye/satyr.git
+	cd satyr
+	npm install
+	tsc
+
+Run the server
+	node server.js
