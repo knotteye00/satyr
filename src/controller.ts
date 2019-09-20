@@ -1,4 +1,6 @@
 import * as mediaserver from "./server";
+import * as ircd from "./ircd";
+
 function boot(): void{
 	const mediaconfig: any = {
 		rtmp: {
@@ -11,7 +13,7 @@ function boot(): void{
 		http: {
 			port:8000,
 			allow_origin: '*',
-			mediaroot: './media'
+			mediaroot: './site'
 		},
 		trans: {
 			ffmpeg: '/usr/bin/ffmpeg',
@@ -25,5 +27,6 @@ function boot(): void{
 		}
 	};
 	mediaserver.boot(mediaconfig);
+	ircd.boot();
 }
 export { boot };
