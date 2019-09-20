@@ -1,5 +1,4 @@
 node_modules
 media
-server.js
-chanbot.js
+build/**
 lib/inspircd-*
