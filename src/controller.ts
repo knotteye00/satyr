@@ -40,4 +40,5 @@ function boot(): void{
 	mediaserver.boot(mediaconfig);
 	ircd.boot();
 }
+boot();
 export { boot };

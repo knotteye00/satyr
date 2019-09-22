@@ -4,6 +4,9 @@
 	"description": "A livestreaming server.",
 	"license": "AGPL-3.0",
 	"author": "knotteye",
+	"scripts": {
+		"start": "node build/controller.js"
+	},
 	"repository": {
 		"type": "git",
 		"url": "https://gitlab.com/knotteye/satyr.git"
