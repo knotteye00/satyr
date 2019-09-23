@@ -5,7 +5,8 @@
 	"license": "AGPL-3.0",
 	"author": "knotteye",
 	"scripts": {
-		"start": "node build/controller.js"
+		"start": "node build/controller.js",
+		"build": "tsc"
 	},
 	"repository": {
 		"type": "git",
@@ -13,7 +14,6 @@
 	},
 	"dependencies": {
 		"bcrypt": "^3.0.6",
-		"check-localhost": "0.0.1",
 		"config": "^3.2.2",
 		"irc": "^0.5.2",
 		"mysql": "^2.17.1",
