@@ -1,44 +1,71 @@
 import * as mediaserver from "./server";
 import * as ircd from "./ircd";
 import * as db from "./database";
+const config = require('config');
 
-const mediaconfig: any = {
-	rtmp: {
-		port: 1935,
-		chunk_size: 60000,
-		gop_cache: true,
-		ping: 30,
-		ping_timeout: 60
-	},
-	http: {
-		port:8000,
-		allow_origin: '*',
-		mediaroot: './site'
-	},
-	trans: {
-		ffmpeg: '/usr/bin/ffmpeg',
-		tasks: [
-			{
-				app: 'live',
-				hls: 'true',
-				hlsFlags: '[hls_time=2:hls_list_size=3:hls_flags=delete_segments]'
-			}
-		]
-	}
-};
+/*var dbcfg: object;
+var servercfg: object;
+var bcryptcfg: object;
+var satyrcfg: object;
+var ircdcfg: object;
 
-const dbconfig: any = {
-	connectionLimit: 50,
-	host : 'localhost',
-	user : 'satyr',
-	password : 'password',
-	database : 'satyr_db'
-};
 
-function boot(): void{
-	db.run(dbconfig);
-	mediaserver.boot(mediaconfig);
+function init(): void{
+	dbcfg = config.get('database');
+	bcryptcfg = config.get('bcrypt');
+	servercfg = config.get('server');
+	satyrcfg = config.get('satyr');
+	ircdcfg = config.get('ircd');
+}*/
+
+function run(): void{
+	//init();
+	const dbcfg = config.database;
+	const bcryptcfg = config.bcrypt;
+	const satyr: object = {
+		privateEndpoint: config.media.privateEndpoint,
+		record: config.media.record,
+		streamKeys: config.media.streamKeys,
+		registration: config.satyr.registration,
+		webFormat: config.satyr.webFormat,
+		restrictedNames: config.satyr.restrictedNames
+	};
+	const nms: object = {
+		logType: config.server.logs,
+		rtmp: {
+			port: config.server.rtmp.port,
+			chunk_size: config.server.rtmp.chunk_size,
+			gop_cache: config.server.rtmp.gop_cache,
+			ping: config.server.rtmp.ping,
+			ping_timeout: config.server.rtmp.ping_timeout,
+		},
+		http: {
+			port: config.server.http.port,
+			mediaroot: config.server.http.directory,
+			allow_origin: config.server.http.allow_origin
+		},
+		trans: {
+			ffmpeg: config.media.ffmpeg,
+			tasks: [
+				{
+					app: config.media.publicEndpoint,
+					hls: config.transcode.hls,
+					hlsFlags: config.transcode.hlsFlags,
+					dash: config.transcode.dash,
+					dashFlags: config.transcode.dashFlags
+				}
+			]
+		},
+		auth: {
+			api: config.server.api,
+			api_user: config.server.api_user,
+			api_pass: config.server.api_pass
+		}
+		
+	};
+	db.run(dbcfg, bcryptcfg);
+	mediaserver.boot(nms, satyr);
 	ircd.boot();
 }
-boot();
-export { boot };
+run();
+export { run };

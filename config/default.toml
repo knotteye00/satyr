@@ -1,0 +1,55 @@
+[bcrypt]
+saltRounds = 12
+
+[satyr]
+registration = false
+webFormat = 'hls'
+record = false
+restrictedNames = ['live','stream']
+
+[ircd]
+enable = false
+port = 7000
+user = ''
+pass = ''
+
+[database]
+host = 'localhost'
+user = 'satyr'
+password = ''
+database = 'satyr_db'
+connectionLimit = '50'
+connectionTimeout = 'false'
+insecureAuth = false
+debug = false
+
+[server]
+logs = 0
+api = false
+api_user = false
+api_pass = false
+
+[server.rtmp]
+port = 1935
+chunk_size = 6000
+gop_cache = true
+ping = 30
+ping_timeout = 60
+
+[server.http]
+port = 8080
+allow_origin = '*'
+directory = './site'
+
+[media]
+streamKeys = false
+record = false
+publicEndpoint = 'live'
+privateEndpoint = 'stream'
+ffmpeg = ''
+
+[transcode]
+hls = true
+hlsFlags = '[hls_time=2:hls_list_size=3:hls_flags=delete_segments]'
+dash = false
+dashFlags = '[f=dash:window_size=3:extra_window_size=5]'

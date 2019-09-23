@@ -1,9 +1,11 @@
 import * as mysql from "mysql";
 import * as bcrypt from "bcrypt";
 var raw: any;
+var cryptoconfig: object;
 
-function run (dbconfig: any){
-	raw = mysql.createPool(dbconfig);
+function run (db: object, bcrypt: object){
+	raw = mysql.createPool(db);
+	cryptoconfig = bcrypt;
 }
 
 function streamKeyAuth(key: string){

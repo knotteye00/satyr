@@ -1,4 +1,5 @@
 node_modules
 site
+config/local.toml
 build/**
 lib/inspircd-*
