@@ -19,7 +19,7 @@ user = 'satyr'
 password = ''
 database = 'satyr_db'
 connectionLimit = '50'
-connectionTimeout = 'false'
+connectionTimeout = '1000'
 insecureAuth = false
 debug = false
 
