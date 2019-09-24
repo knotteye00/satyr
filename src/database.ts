@@ -18,7 +18,6 @@ async function addUser(name: string, password: string, streamer: boolean, admin:
 	let hash: string = await bcrypt.hash(password, cryptoconfig.saltRounds);
 	let dupe = await query('select * from users where username=\''+name+'\'');
 	if(dupe[0]) return false;
-	//INSERT INTO users (username, password_hash, stream_key, record_flag, is_mod) VALUES ('name', 'hash', 'key', 0, admin);
 	let q: string = 'INSERT INTO users (username, password_hash, stream_key, record_flag, is_mod) VALUES (\''+name+'\', \''+hash+'\', \''+key+'\', 0, '+admin+')';
 	await query(q);
 	return true;
