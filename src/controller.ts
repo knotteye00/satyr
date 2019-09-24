@@ -3,23 +3,7 @@ import * as ircd from "./ircd";
 import * as db from "./database";
 const config = require('config');
 
-/*var dbcfg: object;
-var servercfg: object;
-var bcryptcfg: object;
-var satyrcfg: object;
-var ircdcfg: object;
-
-
-function init(): void{
-	dbcfg = config.get('database');
-	bcryptcfg = config.get('bcrypt');
-	servercfg = config.get('server');
-	satyrcfg = config.get('satyr');
-	ircdcfg = config.get('ircd');
-}*/
-
 function run(): void{
-	//init();
 	const dbcfg = config.database;
 	const bcryptcfg = config.bcrypt;
 	const satyr: object = {

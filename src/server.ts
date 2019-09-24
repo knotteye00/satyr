@@ -1,7 +1,6 @@
 import * as NodeMediaServer from "node-media-server";
 import { mkdir } from "fs";
 import * as db from "./database";
-//import { transcode } from "buffer"; why is this here?
 const { exec } = require('child_process');
 
 function boot (mediaconfig: any, satyrconfig: any) {
@@ -20,20 +19,20 @@ function boot (mediaconfig: any, satyrconfig: any) {
 			return false;
 		}
 		if(app === mediaconfig.trans.tasks[0].app) {
-			//only allow publish to public endpoint from localhost
-			//this is NOT a comprehensive way of doing this, but I'm ignoring it
-			//until satyr releases and someone opens an issue
 			if(session.ip.includes('127.0.0.1') || session.ip === '::1') {
+				//only allow publish to public endpoint from localhost
+				//this is NOT a comprehensive way of doing this, but I'm ignoring it
+				//until satyr releases and someone opens an issue
 				console.log("[NodeMediaServer] Local publish, stream:",`${id} ok.`);
 			}
 			else{
 				console.log("[NodeMediaServer] Non-local Publish to public endpoint, rejecting stream:",id);
 				session.reject();
+				return false;
 			}
 			console.log("[NodeMediaServer] Public endpoint, checking record flag.");
-			//if this stream is from the public endpoint, stream
-			db.raw.query('select username from users where username=\''+key+'\' and record_flag=true limit 1', (error, results, fields) => {
-				if (error) {throw error;}
+			//if this stream is from the public endpoint, check if we should be recording
+			return db.query('select username from users where username=\''+key+'\' and record_flag=true limit 1').then((results) => {
 				if(results[0].username && satyrconfig.record){
 					console.log('[NodeMediaServer] Initiating recording for stream:',id);
 					mkdir(mediaconfig.http.mediaroot+'/'+mediaconfig.trans.tasks[0].app+'/'+results[0].username, { recursive : true }, (err) => {
@@ -50,8 +49,8 @@ function boot (mediaconfig: any, satyrconfig: any) {
 				else {
 					console.log('[NodeMediaServer] Skipping recording for stream:',id);
 				}
+				return true;
 			});
-			return true;
 		}
 		if(app !== satyrconfig.privateEndpoint){
 			//app isn't at public endpoint if we've reached this point
@@ -62,8 +61,7 @@ function boot (mediaconfig: any, satyrconfig: any) {
 		//if the url is formatted correctly and the user is streaming to the correct private endpoint
 		//grab the username from the database and redirect the stream there if the key is valid
 		//otherwise kill the session
-		db.raw.query('select username from users where stream_key=\''+key+'\' limit 1', (error, results, fields) => {
-			if (error) {throw error;}
+		db.query('select username from users where stream_key=\''+key+'\' limit 1').then((results) => {
 			if(results[0]){
 				exec('ffmpeg -analyzeduration 0 -i rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key+' -vcodec copy -acodec copy -crf 18 -f flv rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+mediaconfig.trans.tasks[0].app+'/'+results[0].username);
 				console.log('[NodeMediaServer] Stream key okay for stream:',id);
