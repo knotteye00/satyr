@@ -1,8 +1,8 @@
-##Satyr: A livestreaming server
+## Satyr: A livestreaming server
 
 System dependencies: A stable version of node>=10, mysql3 (or a compatible implementation such as MariaDB), and ffmpeg >=4.2
 
-###Build Instructions
+### Build Instructions
 ```bash
 git clone https://gitlab.com/knotteye/satyr.git
 cd satyr
@@ -10,7 +10,7 @@ npm install
 npm run build
 ```
 
-###Run the server
+### Run the server
 ```bash
 npm start
 ```
