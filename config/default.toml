@@ -4,9 +4,10 @@
 saltRounds = 12
 
 [satyr]
+name = ''
+domain = ''
 registration = false
 webFormat = 'hls'
-record = false
 restrictedNames = ['live','stream']
 
 [ircd]

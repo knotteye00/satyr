@@ -1,0 +1,15 @@
+[satyr]
+name = '<iname>'
+domain = '<domain>'
+registration = false
+
+[media]
+streamKeys = false
+record = false
+ffmpeg = '<ffmpeg>'
+
+[database]
+user = '<dbuser>'
+password = '<dbpass>'
+database = '<dbname>'
+host = '<dbhost>'

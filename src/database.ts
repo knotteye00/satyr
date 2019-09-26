@@ -5,7 +5,7 @@ import { resolve } from "url";
 var raw: any;
 var cryptoconfig: any;
 
-function run (db: object, bcrypt: object){
+function init (db: object, bcrypt: object){
 	raw = mysql.createPool(db);
 	cryptoconfig = bcrypt;
 }
@@ -63,4 +63,4 @@ async function validatePassword(username: string, password: string){
 	;
 }
 
-export { query, raw, run, addUser, rmUser, addStreamKey, rmStreamKey };
+export { query, raw, init, addUser, rmUser, addStreamKey, rmStreamKey };

@@ -1,6 +1,6 @@
 import * as child from "child_process";
 var ircd: child.ChildProcess;
-function boot():void{
+function init():void{
 	ircd = child.execFile("./lib/inspircd-3.3.0/run/inspircd", ["restart"], (error, stdout, stderr) => {
 		if (error){
 			console.log("[IRCD] Failed to start Inspircd");
@@ -17,4 +17,4 @@ function reloadSSL():void{
 	ircd.kill("SIGUSR1");
 }
 
-export { boot, reloadSSL };
+export { init, reloadSSL };

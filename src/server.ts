@@ -3,7 +3,7 @@ import { mkdir } from "fs";
 import * as db from "./database";
 const { exec } = require('child_process');
 
-function boot (mediaconfig: any, satyrconfig: any) {
+function init (mediaconfig: any, satyrconfig: any) {
 	const nms = new NodeMediaServer(mediaconfig);
 	nms.run();
 
@@ -95,4 +95,4 @@ function boot (mediaconfig: any, satyrconfig: any) {
 		}
 	});
 }
-export { boot };
+export { init };

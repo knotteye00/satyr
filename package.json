@@ -7,7 +7,8 @@
 	"scripts": {
 		"start": "node build/controller.js",
 		"build": "tsc",
-		"user": "node build/cli.js"
+		"user": "node build/cli.js",
+		"setup": "sh install/setup.sh"
 	},
 	"repository": {
 		"type": "git",

@@ -1,11 +1,11 @@
 import * as mediaserver from "./server";
 import * as ircd from "./ircd";
 import * as db from "./database";
-const config = require('config');
+import * as config from "config";
 
 function run(): void{
-	const dbcfg = config.database;
-	const bcryptcfg = config.bcrypt;
+	const dbcfg: object = config.database;
+	const bcryptcfg: object = config.bcrypt;
 	const satyr: object = {
 		privateEndpoint: config.media.privateEndpoint,
 		record: config.media.record,
@@ -47,9 +47,9 @@ function run(): void{
 		}
 		
 	};
-	db.run(dbcfg, bcryptcfg);
-	mediaserver.boot(nms, satyr);
-	ircd.boot();
+	db.init(dbcfg, bcryptcfg);
+	mediaserver.init(nms, satyr);
+	ircd.init();
 }
 run();
 export { run };

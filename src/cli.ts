@@ -2,7 +2,7 @@ import * as db from "./database"
 import * as flags from "flags";
 import * as config from "config"
 
-db.run(config.database, config.bcrypt);
+db.init(config.database, config.bcrypt);
 
 flags.defineString('add', '', 'User to add');
 flags.defineString('remove', '', 'User to remove');
