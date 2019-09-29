@@ -1,5 +1,5 @@
 node_modules
-site
+site/live
 config/local.toml
 config/generated.toml
 install/db_setup.sql
