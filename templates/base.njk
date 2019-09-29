@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<head>
+	<link rel="stylesheet" type="text/css" href="/styles.css">
+	<title>{{ sitename }}</title>
+</head>
+<body>
+	<div id="wrapper">
+		<div id="header">
+			<span style="float:left;"><h4><a href="/">{{ sitename }}</a> | <a href="/users/live">Live</a> <a href="/users">Users</a> <a href="/about">About</a></h4></span><span style="float:right;"><h4>| <a href="/login">Login</a></h4></span>
+		</div>
+		<div id="content">
+			{% block content %}
+			{% endblock %}
+		</div>
+		<div id="footer">
+			<div>
+				<div>
+					<b>Satyr</b></br>
+					<a href="https://gitlab.com/knotteye/satyr">About</a></br>
+					<a href="">v0.1.0</a>
+				</div>
+				<div>
+					<img src="/satyr.png" height="50" />
+				</div>
+				<div>
+					<b>{{ sitename }}</b></br>
+					<a href="/about">About</a></br>
+					<a href="mailto:{{ email }}">Contact</a>
+				</div>
+			</div>
+		</div>
+	</div> 
+</body>

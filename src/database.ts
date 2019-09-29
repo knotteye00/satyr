@@ -12,6 +12,7 @@ function init (db: object, bcrypt: object){
 
 async function addUser(name: string, password: string, streamer: boolean, admin: boolean){
 	//does not respect registration setting in config
+	//nor stream keys
 	if(password === '') return false;
 	let key: string = ' ';
 	if (streamer) key = await genKey();
@@ -60,7 +61,8 @@ async function query(query: string){
 }
 
 async function validatePassword(username: string, password: string){
-	;
+	let pass: any= await query('select password from users where username=\''+username+'\' limit 1');
+	return await bcrypt.compare(password, pass[0].password_hash);
 }
 
-export { query, raw, init, addUser, rmUser, addStreamKey, rmStreamKey };
+export { query, raw, init, addUser, rmUser, addStreamKey, rmStreamKey, validatePassword };

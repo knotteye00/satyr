@@ -32,8 +32,8 @@ function init (mediaconfig: any, satyrconfig: any) {
 			}
 			console.log("[NodeMediaServer] Public endpoint, checking record flag.");
 			//if this stream is from the public endpoint, check if we should be recording
-			return db.query('select username from users where username=\''+key+'\' and record_flag=true limit 1').then((results) => {
-				if(results[0].username && satyrconfig.record){
+			return db.query('select username,record_flag from users where username=\''+key+'\' limit 1').then((results) => {
+				if(results[0].record_flag && satyrconfig.record){
 					console.log('[NodeMediaServer] Initiating recording for stream:',id);
 					mkdir(mediaconfig.http.mediaroot+'/'+mediaconfig.trans.tasks[0].app+'/'+results[0].username, { recursive : true }, (err) => {
 						if (err) throw err;
