@@ -1,0 +1,9 @@
+{% extends "base.njk" %}
+{% block content %}
+	<h3>Currently live on {{ sitename }}</h3>
+	{% for user in list%}
+		<a href="/users/{{user.username}}">{{ user.username | capitalize}} | {{user.title}}</a></br></br>
+	{% else %}
+		No one is live!
+	{% endfor %}
+{% endblock %}

@@ -1,10 +1,10 @@
 [satyr]
 name = '<iname>'
 domain = '<domain>'
+email = '<email>'
 registration = false
 
 [media]
-streamKeys = false
 record = false
 ffmpeg = '<ffmpeg>'
 

@@ -1,0 +1,9 @@
+{% extends "base.njk" %}
+{% block content %}
+	<h3>Streaming on {{ sitename }}</h3>
+	{% asyncEach user in list%}
+		<a href="/users/{{user.username}}">{{ user.username }}</a></br></br>
+	{% else %}
+		No users found!
+	{% endeach %}
+{% endblock %}

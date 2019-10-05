@@ -1,0 +1,9 @@
+{% extends "base.njk" %}
+{% block content %}
+	<h3>{{ user }}'s VODs</h3>
+	{% asyncEach vid in list%}
+		<a href="/live/{{ user }}/{{ vid.name }}">{{ vid.name }}</a></br></br>
+	{% else %}
+		No recordings found!
+	{% endeach %}
+{% endblock %}

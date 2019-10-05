@@ -8,7 +8,7 @@ function init (mediaconfig: any, satyrconfig: any) {
 	nms.run();
 
 	nms.on('postPublish', (id, StreamPath, args) => {
-		console.log("[NodeMediaServer] Prepublish Hook for stream:",id);
+		console.log("[NodeMediaServer] Publish Hook for stream:",id);
 		let session = nms.getSession(id);
 		let app: string = StreamPath.split("/")[1];
 		let key: string = StreamPath.split("/")[2];
@@ -31,6 +31,8 @@ function init (mediaconfig: any, satyrconfig: any) {
 				return false;
 			}
 			console.log("[NodeMediaServer] Public endpoint, checking record flag.");
+			//set live flag
+			db.query('update user_meta set live=true where username=\''+key+'\' limit 1');
 			//if this stream is from the public endpoint, check if we should be recording
 			return db.query('select username,record_flag from users where username=\''+key+'\' limit 1').then((results) => {
 				if(results[0].record_flag && satyrconfig.record){
@@ -61,7 +63,11 @@ function init (mediaconfig: any, satyrconfig: any) {
 		//if the url is formatted correctly and the user is streaming to the correct private endpoint
 		//grab the username from the database and redirect the stream there if the key is valid
 		//otherwise kill the session
-		db.query('select username from users where stream_key=\''+key+'\' limit 1').then((results) => {
+		if(key.includes(' ')) {
+			session.reject();
+			return false;
+		}
+		db.query('select username from users where stream_key='+db.raw.escape(key)+' limit 1').then((results) => {
 			if(results[0]){
 				exec('ffmpeg -analyzeduration 0 -i rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key+' -vcodec copy -acodec copy -crf 18 -f flv rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+mediaconfig.trans.tasks[0].app+'/'+results[0].username);
 				console.log('[NodeMediaServer] Stream key okay for stream:',id);
@@ -71,6 +77,13 @@ function init (mediaconfig: any, satyrconfig: any) {
 				session.reject();
 			}
 		});
+	});
+	nms.on('donePublish', (id, StreamPath, args) => {
+		let app: string = StreamPath.split("/")[1];
+		let key: string = StreamPath.split("/")[2];
+		if(app === mediaconfig.trans.tasks[0].app) {
+			db.query('update user_meta set live=false where username=\''+key+'\' limit 1');
+		}
 	});
 	nms.on('prePlay', (id, StreamPath, args) => {
 		let session = nms.getSession(id);

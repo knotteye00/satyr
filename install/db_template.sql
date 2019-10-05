@@ -7,5 +7,10 @@ CREATE TABLE users(
 	password_hash BINARY(60),
 	stream_key CHAR(20),
 	record_flag TINYINT,
-	is_mod TINYINT
+);
+CREATE TABLE user_meta(
+	username VARCHAR(25),
+	title VARCHAR(120),
+	about VARCHAR(5000),
+	live TINYINT
 );

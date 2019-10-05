@@ -11,13 +11,14 @@ function run(): void{
 	const satyr: object = {
 		privateEndpoint: config.media.privateEndpoint,
 		record: config.media.record,
-		streamKeys: config.media.streamKeys,
 		registration: config.satyr.registration,
 		webFormat: config.satyr.webFormat,
 		restrictedNames: config.satyr.restrictedNames,
 		name: config.satyr.name,
 		domain: config.satyr.domain,
-		email: config.satyr.email
+		email: config.satyr.email,
+		rootredirect: config.satyr.rootredirect,
+		version: process.env.npm_package_version
 	};
 	const nms: object = {
 		logType: config.server.logs,

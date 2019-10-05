@@ -8,7 +8,8 @@ name = ''
 domain = ''
 registration = false
 webFormat = 'hls'
-restrictedNames = ['live','stream']
+restrictedNames = ['live']
+rootredirect = '/users/live'
 
 [ircd]
 enable = false
@@ -45,7 +46,6 @@ allow_origin = '*'
 directory = './site'
 
 [media]
-streamKeys = false
 record = false
 publicEndpoint = 'live'
 privateEndpoint = 'stream'

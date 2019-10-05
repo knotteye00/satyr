@@ -13,6 +13,8 @@ do
 	echo "Please the domain name for your instance.[]"
 	read domain
 done
+echo "Enter the contact email for the instance."
+read email
 echo "Please enter the path to the ffmpeg binary on your system.[$(which ffmpeg)]"
 read ffmpeg
 ffmpeg="${ffmpeg:=$(which ffmpeg)}"
@@ -30,13 +32,13 @@ read dbhost
 dbhost="${dbhost:=localhost}"
 if [ "$dbhost" != "localhost" ]
 then
-echo "Please enter the ip this server will connect to the database with.[*]"
+echo "Please enter the public ip or hostname this server will connect to the database with.[*]"
 read dbclient
 dbclient="${dbclient:='*'}"
 else
 dbclient="localhost"
 fi
-sed -e "s#<iname>#$name#g" -e "s#<domain>#$domain#g" -e "s#<ffmpeg>#$ffmpeg#g" -e "s#<dbuser>#$dbuser#g" -e "s#<dbname>#$dbname#g" -e "s#<dbpass>#$dbpass#g" -e "s#<dbhost>#$dbhost#g" install/template.local.toml > config/generated.toml
+sed -e "s#<iname>#$name#g" -e "s#<domain>#$domain#g" -e "s#<ffmpeg>#$ffmpeg#g" -e "s#<dbuser>#$dbuser#g" -e "s#<dbname>#$dbname#g" -e "s#<dbpass>#$dbpass#g" -e "s#<dbhost>#$dbhost#g" -e "s#<email>#$email#g" install/template.local.toml > config/generated.toml
 sed -e "s#<dbuser>#$dbuser#g" -e "s#<dbname>#$dbname#g" -e "s#<dbpass>#$dbpass#g" -e "s#<dbhost>#$dbhost#g" -e "s#<dbclient>#$dbclient#g" install/db_template.sql > install/db_setup.sql
 echo "A setup script for the database has been generated at install/db_setup.sql. Please run it by connecting to your database software and executing 'source install/db_setup.sql;''"
 echo "A default configuration file has been generated at config/generated.toml"

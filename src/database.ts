@@ -10,24 +10,23 @@ function init (db: object, bcrypt: object){
 	cryptoconfig = bcrypt;
 }
 
-async function addUser(name: string, password: string, streamer: boolean, admin: boolean){
+async function addUser(name: string, password: string){
 	//does not respect registration setting in config
-	//nor stream keys
 	if(password === '') return false;
-	let key: string = ' ';
-	if (streamer) key = await genKey();
+	let key: string = await genKey();
 	let hash: string = await bcrypt.hash(password, cryptoconfig.saltRounds);
-	let dupe = await query('select * from users where username=\''+name+'\'');
+	let dupe = await query('select * from users where username='+raw.escape(name));
 	if(dupe[0]) return false;
-	let q: string = 'INSERT INTO users (username, password_hash, stream_key, record_flag, is_mod) VALUES (\''+name+'\', \''+hash+'\', \''+key+'\', 0, '+admin+')';
-	await query(q);
+	await query('INSERT INTO users (username, password_hash, stream_key, record_flag) VALUES ('+raw.escape(name)+', '+raw.escape(hash)+', '+raw.escape(key)+', 0');
+	await query('INSERT INTO user_meta (username, title, about, live) VALUES ('+raw.escape(name)+',\'\',\'\',false)');
 	return true;
 }
 
 async function rmUser(name: string){
-	let exist = await query('select * from users where username=\''+name+'\'');
+	let exist = await query('select * from users where username='+raw.escape(name));
 	if(!exist[0]) return false;
-	await query('delete from users where username=\''+name+'\' limit 1');
+	await query('delete from users where username='+raw.escape(name)+' limit 1');
+	await query('delete from user_meta where username='+raw.escape(name)+' limit 1');
 	return true;
 }
 
@@ -38,21 +37,6 @@ async function genKey(){
 	else return key;
 }
 
-async function addStreamKey(name: string){
-	let exist = await query('select * from users where username=\''+name+'\'');
-	if(!exist[0]) return false;
-	let key = await genKey();
-	await query('update users set stream_key=\''+key+'\' where username=\''+name+'\' limit 1');
-	return true;
-}
-
-async function rmStreamKey(name: string){
-	let exist = await query('select * from users where username=\''+name+'\'');
-	if(!exist[0]) return false;
-	await query('update users set stream_key=\'\' where username=\''+name+'\' limit 1');
-	return true;
-}
-
 async function query(query: string){
 	return new Promise(resolve => raw.query(query, (error, results, fields) => {
 		if(error) throw error;
@@ -61,8 +45,12 @@ async function query(query: string){
 }
 
 async function validatePassword(username: string, password: string){
-	let pass: any= await query('select password from users where username=\''+username+'\' limit 1');
-	return await bcrypt.compare(password, pass[0].password_hash);
+	let pass: any = await query('select password_hash from users where username='+raw.escape(username)+' limit 1');
+	return await bcrypt.compare(password, pass[0].password_hash.toString());
 }
 
-export { query, raw, init, addUser, rmUser, addStreamKey, rmStreamKey, validatePassword };
+async function hash(pwd){
+	return await bcrypt.hash(pwd, cryptoconfig.saltRounds);
+}
+
+export { query, raw, init, addUser, rmUser, validatePassword, hash, genKey };
