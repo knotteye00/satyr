@@ -13,7 +13,6 @@ function init(satyr: any){
 	njk.configure('templates', {
 		autoescape: true,
 		express   : app,
-		watch: true
 	});
 	njkconf ={
 		sitename: satyr.name,

@@ -7,7 +7,6 @@ saltRounds = 12
 name = ''
 domain = ''
 registration = false
-webFormat = 'hls'
 restrictedNames = ['live']
 rootredirect = '/users/live'
 
@@ -41,7 +40,6 @@ ping = 30
 ping_timeout = 60
 
 [server.http]
-port = 8080
 allow_origin = '*'
 directory = './site'
 
