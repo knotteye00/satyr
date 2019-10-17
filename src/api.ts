@@ -13,7 +13,10 @@ async function register(name: string, password: string, confirm: string) {
 		if (name === config.restrictedNames[i]) return {"error":"restricted name"};
 	}
 	let r: boolean = await db.addUser(name, password);
-	if(r) return {"success":""};
+	if(r) {
+		let k = await db.query('select stream_key from users where username='+db.raw.escape(name));
+		return k;
+	}
 	return {"error":""};
 }
 

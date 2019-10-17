@@ -42,6 +42,7 @@ ping_timeout = 60
 [server.http]
 allow_origin = '*'
 directory = './site'
+port = 8000
 
 [media]
 record = false

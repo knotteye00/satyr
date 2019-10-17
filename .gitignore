@@ -4,4 +4,3 @@ config/local.toml
 config/generated.toml
 install/db_setup.sql
 build/**
-lib/inspircd-*

@@ -2,14 +2,17 @@ import * as express from "express";
 import * as njk from "nunjucks";
 import * as bodyparser from "body-parser";
 import * as fs from "fs";
+import * as socketio from "socket.io";
+import * as http from "http";
 import * as api from "./api";
 import * as db from "./database";
 
-var app = express();
+const app = express();
+const server = http.createServer(app);
+const io = socketio(server);
 var njkconf;
 
-function init(satyr: any){
-	app.listen(8000);
+function init(satyr: any, port: number){
 	njk.configure('templates', {
 		autoescape: true,
 		express   : app,
@@ -107,6 +110,11 @@ function init(satyr: any){
 	app.use(function (req, res, next) {
 		res.status(404).render('404.njk', njkconf);
 	});
+	//socket.io chat logic
+	io.on('connection', (socket) => {
+		
+	});
+	server.listen(port);
 }
 
 export { init };

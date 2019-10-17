@@ -17,7 +17,7 @@ async function addUser(name: string, password: string){
 	let hash: string = await bcrypt.hash(password, cryptoconfig.saltRounds);
 	let dupe = await query('select * from users where username='+raw.escape(name));
 	if(dupe[0]) return false;
-	await query('INSERT INTO users (username, password_hash, stream_key, record_flag) VALUES ('+raw.escape(name)+', '+raw.escape(hash)+', '+raw.escape(key)+', 0');
+	await query('INSERT INTO users (username, password_hash, stream_key, record_flag) VALUES ('+raw.escape(name)+', '+raw.escape(hash)+', '+raw.escape(key)+', 0)');
 	await query('INSERT INTO user_meta (username, title, about, live) VALUES ('+raw.escape(name)+',\'\',\'\',false)');
 	return true;
 }

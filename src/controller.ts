@@ -1,5 +1,4 @@
 import * as mediaserver from "./server";
-import * as ircd from "./ircd";
 import * as db from "./database";
 import * as api from "./api";
 import * as http from "./http";
@@ -30,7 +29,7 @@ function run(): void{
 			ping_timeout: config.server.rtmp.ping_timeout,
 		},
 		http: {
-			port: config.server.http.port,
+			port: config.server.http.port + 1,
 			mediaroot: config.server.http.directory,
 			allow_origin: config.server.http.allow_origin
 		},
@@ -54,10 +53,9 @@ function run(): void{
 		
 	};
 	api.init(satyr);
-	http.init(satyr);
+	http.init(satyr, config.server.http.port);
 	db.init(dbcfg, bcryptcfg);
 	mediaserver.init(nms, satyr);
-	ircd.init();
 }
 run();
 export { run };
