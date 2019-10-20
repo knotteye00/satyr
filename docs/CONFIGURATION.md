@@ -19,8 +19,9 @@ saltRounds = 12
 [ircd]
 enable = true
 #enable IRC peering
+#unused for now
 ```
 
 ### Web Frontend
 If you want to customize the front-end css, place a file with any changes you wish to make at site/local.css
-You can change the logo by replacing site/logo.svg, or edit templates/base.njk to look for another source.
+You can change the logo by replacing site/logo.svg.

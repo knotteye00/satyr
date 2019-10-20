@@ -1,0 +1,21 @@
+[Unit]
+Description=A livestreaming server.
+After=network.target
+
+[Service]
+ExecReload=/bin/kill $MAINPID
+KillMode=process
+Restart=on-failure
+
+User=satyr
+Environment="HOME=/var/lib/satyr"
+WorkingDirectory=/opt/satyr
+ExecStart=/usr/bin/npm start
+
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

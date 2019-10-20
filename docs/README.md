@@ -10,6 +10,7 @@ npm install
 npm run setup
 npm run build
 ```
+Follow the instructions after setup runs.
 
 ### Run the server
 ```bash
