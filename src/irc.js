@@ -141,15 +141,14 @@ socket.on('data', data => {
     })
 })
 
-process.on('SIGINT', () => {
-  socket.write('QUIT\r\n')
-  process.exit()
-})
-
 module.exports.connect = conf => new Promise((resolve, reject) => {
   emitter.once('ping', resolve)
   config = conf
   socket.connect(config.port)
+  process.on('SIGINT', () => {
+    socket.write('QUIT\r\n')
+    process.exit()
+  })
 })
 module.exports.events = emitter
 

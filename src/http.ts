@@ -157,7 +157,7 @@ async function init(satyr: any, port: number, ircconf: any){
 				if(ircconf.enable) irc.part(socket.nick, rooms[i]);
 				io.to(rooms[i]).emit('ALERT', socket.nick+' disconnected');
 			}
-			irc.unregisterUser(socket.nick);
+			if(ircconf.enable) irc.unregisterUser(socket.nick);
 			store.rm(socket.nick);
 		});
 		socket.on('NICK', async (data) => {
