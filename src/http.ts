@@ -18,7 +18,7 @@ function init(satyr: any, port: number){
 	njk.configure('templates', {
 		autoescape: true,
 		express   : app,
-		watch: true
+		watch: false
 	});
 	njkconf ={
 		sitename: satyr.name,
@@ -88,6 +88,9 @@ function init(satyr: any, port: number){
 	});
 	app.get('/chat', (req, res) => {
 		res.render('chat.html', njkconf);
+	});
+	app.get('/help', (req, res) => {
+		res.render('help.njk', njkconf);
 	});
 	//api handlers
 	app.post('/api/register', (req, res) => {

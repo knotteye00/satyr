@@ -2,7 +2,7 @@ import * as mediaserver from "./server";
 import * as db from "./database";
 import * as api from "./api";
 import * as http from "./http";
-import * as cleanup from "./cleanup"
+import * as cleanup from "./cleanup";
 import * as config from "config";
 
 async function run() {

@@ -1,0 +1,16 @@
+{% extends "base.njk" %}
+{% block content %}
+<p></p>
+<h4>Chatting</h4>
+The webclient for chat can be accessed on the streamer's page, or at <a href="https://{{ domain }}/chat">https://{{ domain }}/chat</a></br></br>
+The following commands are available:</br>
+`/nick kawen (password)` Password is only required if kawen is a registered user.</br>
+`/join kawen` Join the chatroom for kawen's stream and leave the previous room.</br>
+`/kick cvcvcv` Available only in your own room if you are a streamer. Forcefully disconnect the user.</br>
+
+<h4>Streaming</h4>
+Users should stream to <a>rtmp://{{ domain }}/stream/Stream-Key</a></br></br>
+The stream will be available at <a>rtmp://{{ domain }}/live/username</a> </br>or at your page on <a>https://{{ domain }}/users/username</a></br>
+</br>
+Most software, such as OBS, will have a separate field for the URL and stream key, in which case you can enter rtmp://{{ domain }}/stream/ and the stream key in the appropriate field.
+{% endblock %}
