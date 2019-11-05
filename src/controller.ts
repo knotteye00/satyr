@@ -56,7 +56,7 @@ async function run() {
 	db.init(dbcfg, bcryptcfg);
 	await cleanup.init(config.server.http.directory);
 	api.init(satyr);
-	http.init(satyr, config.server.http.port);
+	http.init(satyr, config.server.http.port, config.ircd);
 	mediaserver.init(nms, satyr);
 }
 run();

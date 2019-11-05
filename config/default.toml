@@ -12,9 +12,11 @@ rootredirect = '/users/live'
 
 [ircd]
 enable = false
-port = 7000
-user = ''
+port = 6667
+sid = ''
+server = ''
 pass = ''
+vhost = 'web.satyr.net'
 
 [database]
 host = 'localhost'
