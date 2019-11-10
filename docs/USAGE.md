@@ -3,9 +3,9 @@
 ### Administration
 Satyr needs access to port 1935 for RTMP streams, and will serve HTTP on port 8000. The ports can be changed with follow config lines.
 ```
-[http]
+[server.http]
 port = 8000
-[rtmp]
+[server.rtmp]
 port = 1935
 ```
 Changing the rtmp port is not recommended.

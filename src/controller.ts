@@ -2,9 +2,10 @@ import * as mediaserver from "./server";
 import * as db from "./database";
 import * as api from "./api";
 import * as http from "./http";
+import * as cleanup from "./cleanup";
 import * as config from "config";
 
-function run(): void{
+async function run() {
 	const dbcfg: object = config.database;
 	const bcryptcfg: object = config.bcrypt;
 	const satyr: object = {
@@ -52,9 +53,10 @@ function run(): void{
 		}
 		
 	};
-	api.init(satyr);
-	http.init(satyr, config.server.http.port);
 	db.init(dbcfg, bcryptcfg);
+	await cleanup.init(config.server.http.directory);
+	api.init(satyr);
+	http.init(satyr, config.server.http.port, config.ircd);
 	mediaserver.init(nms, satyr);
 }
 run();

@@ -7,6 +7,7 @@ import * as http from "http";
 import * as dirty from "dirty";
 import * as api from "./api";
 import * as db from "./database";
+import * as irc from "./irc";
 
 const app = express();
 const server = http.createServer(app);
@@ -14,11 +15,11 @@ const io = socketio(server);
 const store = dirty();
 var njkconf;
 
-function init(satyr: any, port: number){
+async function init(satyr: any, port: number, ircconf: any){
 	njk.configure('templates', {
 		autoescape: true,
 		express   : app,
-		watch: true
+		watch: false
 	});
 	njkconf ={
 		sitename: satyr.name,
@@ -51,9 +52,9 @@ function init(satyr: any, port: number){
 		});
 	});
 	app.get('/users/*', (req, res) => {
-		njkconf.user = req.url.split('/')[2].toLowerCase();
-		db.query('select title,about from user_meta where username='+db.raw.escape(njkconf.user)).then((result) => {
+		db.query('select username,title,about from user_meta where username='+db.raw.escape(req.url.split('/')[2].toLowerCase())).then((result) => {
 			if(result[0]){
+				njkconf.user = result[0].username;
 				njkconf.streamtitle = result[0].title;
 				njkconf.about = result[0].about;
 				res.render('user.njk', njkconf);
@@ -89,6 +90,9 @@ function init(satyr: any, port: number){
 	app.get('/chat', (req, res) => {
 		res.render('chat.html', njkconf);
 	});
+	app.get('/help', (req, res) => {
+		res.render('help.njk', njkconf);
+	});
 	//api handlers
 	app.post('/api/register', (req, res) => {
 		api.register(req.body.username, req.body.password, req.body.confirm).then( (result) => {
@@ -116,26 +120,44 @@ function init(satyr: any, port: number){
 	app.use(function (req, res, next) {
 		res.status(404).render('404.njk', njkconf);
 	});
+	//irc peering
+	if(ircconf.enable){
+		await irc.connect({
+			port: ircconf.port,
+			sid: ircconf.sid,
+			pass: ircconf.pass,
+			server: ircconf.server,
+			vhost: ircconf.vhost
+		});
+		irc.events.on('message', (nick, channel, msg) => {
+			io.to(channel).emit('MSG', {nick: nick, msg: msg});
+		});
+	}
 	//socket.io chat logic
 	io.on('connection', async (socket) => {
 		socket.nick = await newNick(socket);
+		if(ircconf.enable) irc.registerUser(socket.nick);
 		socket.on('JOINROOM', async (data) => {
 			let t: any = await db.query('select username from users where username='+db.raw.escape(data));
 			if(t[0]){
 				socket.join(data);
 				io.to(data).emit('JOINED', {nick: socket.nick});
+				if(ircconf.enable) irc.join(socket.nick, data);
 			}
 			else socket.emit('ALERT', 'Room does not exist');
 		});
 		socket.on('LEAVEROOM', (data) => {
 			socket.leave(data);
+			if(ircconf.enable) irc.part(socket.nick, data);
 			io.to(data).emit('LEFT', {nick: socket.nick});
 		});
 		socket.on('disconnecting', (reason) => {
 			let rooms = Object.keys(socket.rooms);
 			for(let i=1;i<rooms.length;i++){
+				if(ircconf.enable) irc.part(socket.nick, rooms[i]);
 				io.to(rooms[i]).emit('ALERT', socket.nick+' disconnected');
 			}
+			if(ircconf.enable) irc.unregisterUser(socket.nick);
 			store.rm(socket.nick);
 		});
 		socket.on('NICK', async (data) => {
@@ -160,7 +182,9 @@ function init(satyr: any, port: number){
 			}
 		});
 		socket.on('MSG', (data) => {
+			if(data.msg === "") return;
 			io.to(data.room).emit('MSG', {nick: socket.nick, msg: data.msg});
+			if(ircconf.enable) irc.send(socket.nick, data.room, data.msg);
 		});
 		socket.on('KICK', (data) => {
 			if(socket.nick === data.room){
