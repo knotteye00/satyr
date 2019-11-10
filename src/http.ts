@@ -52,9 +52,9 @@ async function init(satyr: any, port: number, ircconf: any){
 		});
 	});
 	app.get('/users/*', (req, res) => {
-		njkconf.user = req.url.split('/')[2].toLowerCase();
-		db.query('select title,about from user_meta where username='+db.raw.escape(njkconf.user)).then((result) => {
+		db.query('select username,title,about from user_meta where username='+db.raw.escape(req.url.split('/')[2].toLowerCase())).then((result) => {
 			if(result[0]){
+				njkconf.user = result[0].username;
 				njkconf.streamtitle = result[0].title;
 				njkconf.about = result[0].about;
 				res.render('user.njk', njkconf);

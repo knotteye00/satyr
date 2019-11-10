@@ -33,3 +33,17 @@ npm start
 
 It is reccomended that you run Satyr behind a TLS terminating reverse proxy, like nginx.
 An example systemd service is provided at install/satyr.service. It assumes you've installed satyr into /opt/satyr, and created a satyr user with the home directory /var/lib/satyr for the purpose of running the service.
+
+## Updating Satyr
+Updating should be as simple as pulling the latest code and dependencies, then building and restarting the server.
+
+```bash
+git pull
+npm i
+npm run build
+```
+
+Then restart the server.
+
+## Migrating Satyr
+To backup and restore, you will need to export the mysqlDB. Restore the new database from the backup, then copy the config/local.toml file and the site directory to the new install.
