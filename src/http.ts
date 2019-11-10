@@ -182,6 +182,7 @@ async function init(satyr: any, port: number, ircconf: any){
 			}
 		});
 		socket.on('MSG', (data) => {
+			if(data.msg === "") return;
 			io.to(data.room).emit('MSG', {nick: socket.nick, msg: data.msg});
 			if(ircconf.enable) irc.send(socket.nick, data.room, data.msg);
 		});
