@@ -1,6 +1,6 @@
 {
 	"name": "satyr",
-	"version": "0.4.0",
+	"version": "0.4.2",
 	"description": "A livestreaming server.",
 	"license": "AGPL-3.0",
 	"author": "knotteye",
@@ -26,6 +26,7 @@
 		"nunjucks": "^3.2.0",
 		"recursive-readdir": "^2.2.2",
 		"socket.io": "^2.3.0",
+		"strftime": "^0.10.0",
 		"toml": "^3.0.0"
 	},
 	"devDependencies": {
