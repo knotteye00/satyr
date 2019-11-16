@@ -7,7 +7,7 @@ function newPopup(url) {
 }
 </script>
   </br>
-	<span style="float: left;font-size: large;"><a href="/live/{{ user }}/index.m3u8">{{ user }}</a> | {{ streamtitle | escape }}</b></span><span style="float: right;font-size: large;"> Links | <a href="rtmp://{{ domain }}/live/{{ user }}">Watch</a> <a href="JavaScript:newPopup('/chat?room={{ user }}');">Chat</a> <a href="/vods/{{ user }}">VODs</a></span>
+	<span style="float: left;font-size: large;"><a href="/live/{{ user }}/index.mpd">{{ user }}</a> | {{ streamtitle | escape }}</b></span><span style="float: right;font-size: large;"> Links | <a href="rtmp://{{ domain }}/live/{{ user }}">Watch</a> <a href="JavaScript:newPopup('/chat?room={{ user }}');">Chat</a> <a href="/vods/{{ user }}">VODs</a></span>
 	<div id="jscontainer">
 		<div id="jschild" style="width: 70%;height: 100%;">
 			<video controls poster="/thumbnail.jpg" class="video-js vjs-default-skin" id="live-video" style="width:100%;height:100%;"></video>
