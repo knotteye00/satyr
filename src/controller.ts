@@ -10,6 +10,7 @@ async function run() {
 	const bcryptcfg: object = config.bcrypt;
 	const satyr: object = {
 		privateEndpoint: config.media.privateEndpoint,
+		publicEndpoint: config.media.publicEndpoint,
 		record: config.media.record,
 		registration: config.satyr.registration,
 		webFormat: config.satyr.webFormat,
@@ -18,7 +19,8 @@ async function run() {
 		domain: config.satyr.domain,
 		email: config.satyr.email,
 		rootredirect: config.satyr.rootredirect,
-		version: process.env.npm_package_version
+		version: process.env.npm_package_version,
+		directory: config.server.http.directory
 	};
 	const nms: object = {
 		logType: config.server.logs,
@@ -29,7 +31,7 @@ async function run() {
 			ping: config.server.rtmp.ping,
 			ping_timeout: config.server.rtmp.ping_timeout,
 		},
-		http: {
+		/*http: {
 			port: config.server.http.port + 1,
 			mediaroot: config.server.http.directory,
 			allow_origin: config.server.http.allow_origin
@@ -45,7 +47,7 @@ async function run() {
 					dashFlags: config.transcode.dashFlags
 				}
 			]
-		},
+		},*/
 		auth: {
 			api: config.server.api,
 			api_user: config.server.api_user,
@@ -54,7 +56,7 @@ async function run() {
 		
 	};
 	db.init(dbcfg, bcryptcfg);
-	await cleanup.init(config.server.http.directory);
+	await cleanup.init();
 	api.init(satyr);
 	http.init(satyr, config.server.http.port, config.ircd);
 	mediaserver.init(nms, satyr);
