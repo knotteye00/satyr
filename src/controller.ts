@@ -20,7 +20,8 @@ async function run() {
 		email: config.satyr.email,
 		rootredirect: config.satyr.rootredirect,
 		version: process.env.npm_package_version,
-		directory: config.server.http.directory
+		directory: config.server.http.directory,
+		ffmpeg: config.media.ffmpeg
 	};
 	const nms: object = {
 		logType: config.server.logs,
