@@ -1,5 +1,6 @@
 import * as NodeMediaServer from "node-media-server";
 import { mkdir, fstat, access } from "fs";
+import * as strf from "strftime";
 import * as db from "./database";
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const { exec, execFile } = require('child_process');
@@ -40,7 +41,7 @@ function init (mediaconfig: any, satyrconfig: any) {
 					console.log('[NodeMediaServer] Initiating recording for stream:',id);
 					mkdir(satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username, { recursive : true }, (err) => {
 						if (err) throw err;
-						let subprocess = exec('ffmpeg -i rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.publicEndpoint+'/'+results[0].username+' -vcodec copy -acodec copy '+satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username+'/$(date +%d%b%Y-%H%M).mp4',{
+						let subprocess = execFile('/usr/bin/ffmpeg', ['-i', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.publicEndpoint+'/'+results[0].username, '-vcodec', 'copy', '-acodec', 'copy', satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username+'/'+strf('%d%b%Y-%H%M')+'.mp4'], {
 							detached : true,
 							stdio : 'inherit'
 						});
@@ -71,12 +72,14 @@ function init (mediaconfig: any, satyrconfig: any) {
 		db.query('select username from users where stream_key='+db.raw.escape(key)+' limit 1').then(async (results) => {
 			if(results[0]){
 				//push to rtmp
-				exec('ffmpeg -analyzeduration 0 -i rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key+' -vcodec copy -acodec copy -crf 18 -f flv rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.publicEndpoint+'/'+results[0].username);
+				execFile('/usr/bin/ffmpeg', ['-analyzeduration', '0', '-i', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key, '-vcodec', 'copy', '-acodec', 'copy', '-crf', '18', '-f', 'flv', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.publicEndpoint+'/'+results[0].username]);
+				//exec('ffmpeg -analyzeduration 0 -i rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key+' -vcodec copy -acodec copy -crf 18 -f flv rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.publicEndpoint+'/'+results[0].username);
 				//push to mpd after making sure directory exists
 				mkdir(satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username, { recursive : true }, (err) => {;});
 				sleep(5000).then( () => {
 					//wait for stream to initialize, but i'm not happy about this
-					exec('ffmpeg -y -i rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key+' -map 0:2 -map 0:2 -map 0:2 -map 0:1 -c:a copy -c:v:0 copy -c:v:1 libx264 -c:v:2 libx264 -crf:1 33 -crf:2 40 -b:v:1 3000K -b:v:2 1500K -remove_at_exit 1 -seg_duration 1 -window_size 30 -f dash '+satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username+'/index.mpd');
+					execFile('/usr/bin/ffmpeg', ['-y', '-i', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key, '-map', '0:2', '-map', '0:2', '-map', '0:2', '-map', '0:1', '-c:a', 'copy', '-c:v:0', 'copy', '-c:v:1', 'libx264', '-c:v:2', 'libx264', '-crf:1', '33', '-crf:2', '40', '-b:v:1', '3000K', '-b:v:2', '1500K', '-remove_at_exit', '1', '-seg_duration', '1', '-window_size', '30', '-f', 'dash', satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username+'/index.mpd']);
+					//exec('ffmpeg -y -i rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key+' -map 0:2 -map 0:2 -map 0:2 -map 0:1 -c:a copy -c:v:0 copy -c:v:1 libx264 -c:v:2 libx264 -crf:1 33 -crf:2 40 -b:v:1 3000K -b:v:2 1500K -remove_at_exit 1 -seg_duration 1 -window_size 30 -f dash '+satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username+'/index.mpd');
 				});
 				//switch to execFile at some point, it's safer
 				//execFile('/usr/bin/ffmpeg',['-analyzeduration 0', '-i rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key, '-vcodec copy', '-acodec copy', '-crf 18', '-f flv', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.publicEndpoint+'/'+results[0].username]);
