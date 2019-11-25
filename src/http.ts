@@ -50,21 +50,15 @@ async function init(satyr: any, port: number, ircconf: any){
 	app.get('/users/*', (req, res) => {
 		db.query('select username,title,about from user_meta where username='+db.raw.escape(req.url.split('/')[2].toLowerCase())).then((result) => {
 			if(result[0]){
-				/*njkconf.user = result[0].username;
-				njkconf.streamtitle = result[0].title;
-				njkconf.about = result[0].about;*/
 				res.render('user.njk', Object.assign(result[0], njkconf));
 			}
 			else res.render('404.njk', njkconf);
 		});
 	});
 	app.get('/vods/*', (req, res) => {
-		njkconf.user = req.url.split('/')[2].toLowerCase();
 		db.query('select username from user_meta where username='+db.raw.escape(req.url.split('/')[2].toLowerCase())).then((result) => {
 			if(result[0]){
 				fs.readdir('./site/live/'+njkconf.user, {withFileTypes: true} , (err, files) => {
-					//if(files) njkconf.list = files.filter(fn => fn.name.endsWith('.mp4'));
-					//else njkconf.list = [];
 					res.render('vods.njk', Object.assign({user: result[0].username, list: files.filter(fn => fn.name.endsWith('.mp4'))}, njkconf));
 				});
 			}
@@ -178,7 +172,7 @@ async function init(satyr: any, port: number, ircconf: any){
 			}
 		});
 		socket.on('MSG', (data) => {
-			if(data.msg === "") return;
+			if(data.msg === "" || !data.msg.replace(/\s/g, '').length) return;
 			io.to(data.room).emit('MSG', {nick: socket.nick, msg: data.msg});
 			if(ircconf.enable) irc.send(socket.nick, data.room, data.msg);
 		});
@@ -200,7 +194,8 @@ async function init(satyr: any, port: number, ircconf: any){
 }
 
 async function newNick(socket) {
-	let n: string = 'Guest'+Math.floor(Math.random() * Math.floor(100));
+	//i just realized how shitty of an idea this is
+	let n: string = 'Guest'+Math.floor(Math.random() * Math.floor(1000));
 	if(store.get(n)) return newNick(socket);
 	else {
 		store.set(n, socket.id);
