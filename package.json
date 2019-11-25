@@ -5,8 +5,7 @@
 	"license": "AGPL-3.0",
 	"author": "knotteye",
 	"scripts": {
-		"start": "node build/controller.js",
-		"build": "tsc",
+		"start": "tsc && node build/controller.js",
 		"user": "node build/cli.js",
 		"setup": "sh install/setup.sh"
 	},
@@ -27,10 +26,10 @@
 		"recursive-readdir": "^2.2.2",
 		"socket.io": "^2.3.0",
 		"strftime": "^0.10.0",
-		"toml": "^3.0.0"
+		"toml": "^3.0.0",
+		"typescript": "^3.6.3"
 	},
 	"devDependencies": {
-		"@types/node": "^12.7.5",
-		"typescript": "^3.6.3"
+		"@types/node": "^12.7.5"
 	}
 }

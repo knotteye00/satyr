@@ -61,6 +61,7 @@ async function run() {
 	api.init(satyr);
 	http.init(satyr, config.server.http.port, config.ircd);
 	mediaserver.init(nms, satyr);
+	console.log(`Satyr v${process.env.npm_package_version} ready`);
 }
 run();
 export { run };
