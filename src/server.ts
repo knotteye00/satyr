@@ -73,14 +73,16 @@ function init (mediaconfig: any, satyrconfig: any) {
 				execFile(satyrconfig.ffmpeg, ['-loglevel', 'fatal', '-analyzeduration', '0', '-i', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key, '-vcodec', 'copy', '-acodec', 'copy', '-crf', '18', '-f', 'flv', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.publicEndpoint+'/'+results[0].username], {maxBuffer: Infinity});
 				//exec('ffmpeg -analyzeduration 0 -i rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key+' -vcodec copy -acodec copy -crf 18 -f flv rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.publicEndpoint+'/'+results[0].username);
 				//push to mpd after making sure directory exists
-				mkdir(satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username, { recursive : true }, (err) => {;});
-				while(true){
-					if(session.audioCodec !== 0 && session.videoCodec !== 0){
-						execFile(satyrconfig.ffmpeg, ['-loglevel', 'fatal', '-y', '-i', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key, '-map', '0:2', '-map', '0:2', '-map', '0:2', '-map', '0:1', '-c:a', 'copy', '-c:v:0', 'copy', '-c:v:1', 'libx264', '-c:v:2', 'libx264', '-crf:1', '33', '-crf:2', '40', '-b:v:1', '3000K', '-b:v:2', '1500K', '-remove_at_exit', '1', '-seg_duration', '1', '-window_size', '30', '-f', 'dash', satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username+'/index.mpd'], {maxBuffer: Infinity});
-						break;
+				mkdir(satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username, { recursive : true }, async (err) => {
+					if (err) throw err;
+					while(true){
+						if(session.audioCodec !== 0 && session.videoCodec !== 0){
+							execFile(satyrconfig.ffmpeg, ['-loglevel', 'fatal', '-y', '-i', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key, '-map', '0:2', '-map', '0:2', '-map', '0:2', '-map', '0:1', '-c:a', 'copy', '-c:v:0', 'copy', '-c:v:1', 'libx264', '-c:v:2', 'libx264', '-crf:1', '33', '-crf:2', '40', '-b:v:1', '3000K', '-b:v:2', '1500K', '-remove_at_exit', '1', '-seg_duration', '1', '-window_size', '30', '-f', 'dash', satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username+'/index.mpd'], {maxBuffer: Infinity});
+							break;
+						}
+						await sleep(300);
 					}
-					await sleep(300);
-				}
+				});
 			}
 			else{
 				console.log('[NodeMediaServer] Invalid stream key for stream:',id);
