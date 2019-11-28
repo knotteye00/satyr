@@ -1,5 +1,5 @@
 [Unit]
-Description=A livestreaming server.
+Description=satyr livestreaming server
 After=network.target
 
 [Service]
