@@ -1,6 +1,7 @@
 node_modules
 site/live
 config/local.toml
+config/jwt.pem
 config/generated.toml
 install/db_setup.sql
 build/**

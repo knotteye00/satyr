@@ -1,11 +1,10 @@
 {% extends "base.njk" %}
 {% block content %}
-<h3>Change your password on {{ sitename }}</h3><span style="font-size: small;">Not registered yet? Sign up <a href="/register">here</a>.</br> Update your <a href="/profile">profile</a> or <a href="/changesk">stream key</a>.</span>
+<h3>Change your password on {{ sitename }}</h3>
 <p></p>
 	<form action="/api/user/password" method="POST" target="responseFrame">
-		Username: </br><input type="text" name="username" style="min-width: 300px" placeholder="e.g. lain"/></br>
-   		Password: </br><input type="password" name="password" style="min-width: 300px"/></br>
-		New Password: </br><input type="password" name="newpassword" style="min-width: 300px"/></br>
+   		Old Password: </br><input type="password" name="password" style="min-width: 300px"/></br>
+		New Password: </br><input type="password" name="newpassword" style="min-width: 300px"/></br></br>
 		<input type="submit" value="Submit">
 	</form>
 	<iframe name="responseFrame" border="0" frameborder="0" style="display: inline;"></iframe>

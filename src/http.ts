@@ -4,22 +4,35 @@ import * as bodyparser from "body-parser";
 import * as fs from "fs";
 import * as socketio from "socket.io";
 import * as http from "http";
+import * as cookies from "cookie-parser";
 import * as dirty from "dirty";
 import * as api from "./api";
 import * as db from "./database";
 import * as irc from "./irc";
+import { readFileSync, writeFileSync } from "fs";
+import { JWT, JWK } from "jose";
+import { strict } from "assert";
+import { parse } from "path";
 
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 const store = dirty();
+var jwkey;
+try{
+	jwkey = JWK.asKey(readFileSync('./config/jwt.pem'));
+} catch (e) {
+	console.log("No key found for JWT signing, generating one now.");
+	jwkey = JWK.generateSync('RSA', 2048, { use: 'sig' });
+	writeFileSync('./config/jwt.pem', jwkey.toPEM(true));
+}
 var njkconf;
 
 async function init(satyr: any, port: number, ircconf: any){
 	njk.configure('templates', {
-		autoescape: true,
-		express   : app,
-		watch: false
+		autoescape	: true,
+		express   	: app,
+		watch		: true
 	});
 	njkconf ={
 		sitename: satyr.name,
@@ -28,88 +41,287 @@ async function init(satyr: any, port: number, ircconf: any){
 		rootredirect: satyr.rootredirect,
 		version: satyr.version
 	};
+	app.use(cookies());
 	app.use(bodyparser.json());
 	app.use(bodyparser.urlencoded({ extended: true }));
 	//site handlers
+	await initSite(satyr.registration);
+	//api handlers
+	await initAPI();
+	//static files if nothing else matches first
+	app.use(express.static(satyr.directory));
+	//404 Handler
+	app.use(function (req, res, next) {
+		if(tryDecode(req.cookies.Authorization)) {
+			res.status(404).render('404.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+		}
+		else res.status(404).render('404.njk', njkconf);
+		//res.status(404).render('404.njk', njkconf);
+	});
+	await initChat(ircconf);
+	server.listen(port);
+}
+
+async function newNick(socket, skip?: boolean) {
+	if(socket.handshake.headers['cookie'] && !skip){
+		let c = await parseCookie(socket.handshake.headers['cookie']);
+		let t = await validToken(c['Authorization']);
+		if(t) return t['username'];
+	}
+	//i just realized how shitty of an idea this is
+	let n: string = 'Guest'+Math.floor(Math.random() * Math.floor(1000));
+	if(store.get(n)) return newNick(socket, true);
+	else {
+		store.set(n, socket.id);
+		return n;
+	}
+}
+
+async function chgNick(socket, nick) {
+	let rooms = Object.keys(socket.rooms);
+	for(let i=1;i<rooms.length;i++){
+		io.to(rooms[i]).emit('ALERT', socket.nick+' is now known as '+nick);
+	}
+	store.rm(socket.nick);
+	store.set(nick, socket.id);
+	socket.nick = nick;
+}
+
+async function genToken(u: string){
+	return await JWT.sign({
+		username: u
+	}, jwkey, {
+		expiresIn: '1 week',
+		iat: true,
+		kid: false
+	});//set jwt
+}
+
+async function validToken(t: any){
+	try {
+		let token = JWT.verify(t, jwkey);
+		return token;
+	}
+	catch (err){
+		return false;
+	}
+}
+
+function tryDecode(t: any){
+	try {
+		return JWT.decode(t);
+	}
+	catch (err){
+		return false;
+	}
+}
+
+async function parseCookie(c){
+	if(typeof(c) !== 'string' || !c.includes('=')) return {};
+	return Object.assign({[c.split('=')[0].trim()]:c.split('=')[1].split(';')[0].trim()}, await parseCookie(c.split(/;(.+)/)[1]));
+}
+
+async function initAPI() {
+	app.get('/api/users/live', (req, res) => {
+		db.query('select username,title from user_meta where live=1 limit 10;').then((result) => {
+			res.send(result);
+		});
+	});
+	app.get('/api/users/live/:num', (req, res) => {
+		if(req.params.num > 50) req.params.num = 50;
+		db.query('select username,title from user_meta where live=1 limit '+req.params.num+';').then((result) => {
+			res.send(result);
+		});
+	});
+	app.post('/api/register', (req, res) => {
+		api.register(req.body.username, req.body.password, req.body.confirm).then( (result) => {
+			if(result[0]) return genToken(req.body.username).then((t) => {
+				res.cookie('Authorization', t);
+				res.send(result);
+				return;
+			});
+			res.send(result);
+		});
+	});
+	app.post('/api/user/update', (req, res) => {
+		validToken(req.cookies.Authorization).then((t) => {
+			if(t) {
+				return api.update({name: t['username'],
+					title: "title" in req.body ? req.body.title : false,
+					bio: "bio" in req.body ? req.body.bio : false,
+					rec: "record" in req.body ? req.body.record : "NA"
+				}).then((r) => {
+					res.send(r);
+					return;
+				});
+			}
+			else {
+				res.send('{"error":"invalid token"}');
+				return;
+			}
+		});
+		/*api.update(req.body.username, req.body.password, req.body.title, req.body.bio, req.body.record).then((result) => {
+			res.send(result);
+		});*/
+	});
+	app.post('/api/user/password', (req, res) => {
+		validToken(req.cookies.Authorization).then((t) => {
+			if(t) {
+				return api.changepwd(t['username'], req.body.password, req.body.newpassword).then((r) => {
+					res.send(r);
+					return;
+				});
+			}
+			else {
+				res.send('{"error":"invalid token"}');
+				return;
+			}
+		});
+	});
+	app.post('/api/user/streamkey', (req, res) => {
+		validToken(req.cookies.Authorization).then((t) => {
+			if(t) {
+				api.changesk(t['username']).then((r) => {
+					res.send(r);
+				});
+			}
+			else {
+				res.send('{"error":"invalid token"}');
+			}
+		});
+	});
+	app.post('/api/login', (req, res) => {
+		if(req.cookies.Authorization) validToken(req.cookies.Authorization).then((t) => {
+			if(t) {
+				if(t['exp'] - 86400 < Math.floor(Date.now() / 1000)){
+					return genToken(t['username']).then((t) => {
+						res.cookie('Authorization', t);
+						res.send('{"success":""}');
+						return;
+					});
+				}
+				else {
+					res.send('{"success":"already verified"}');
+					return;
+				}
+			}
+			else {
+				res.send('{"error":"invalid token"}');
+				return;
+			}
+		});
+		else {
+			api.login(req.body.username, req.body.password).then((result) => {
+				if(!result){
+					genToken(req.body.username).then((t) => {
+						res.cookie('Authorization', t);
+						res.send('{"success":""}');
+					})
+				}
+				else {
+					res.send(result);
+				}
+			});
+		}
+	})
+}
+
+async function initSite(openReg) {
 	app.get('/', (req, res) => {
 		res.redirect(njkconf.rootredirect);
 	});
 	app.get('/about', (req, res) => {
-		res.render('about.njk', njkconf);
+		if(tryDecode(req.cookies.Authorization)) {
+			res.render('about.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+		}
+		else res.render('about.njk',njkconf);
 	});
 	app.get('/users', (req, res) => {
 		db.query('select username from users').then((result) => {
-			res.render('list.njk', Object.assign({list: result}, njkconf));
+			if(tryDecode(req.cookies.Authorization)) {
+				res.render('list.njk', Object.assign({list: result}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+			}
+			else res.render('list.njk', Object.assign({list: result}, njkconf));
+			//res.render('list.njk', Object.assign({list: result}, njkconf));
 		});
 	});
 	app.get('/users/live', (req, res) => {
 		db.query('select username,title from user_meta where live=1;').then((result) => {
-			res.render('live.njk', Object.assign({list: result}, njkconf));
-		});
-	});
-	app.get('/users/*', (req, res) => {
-		db.query('select username,title,about from user_meta where username='+db.raw.escape(req.url.split('/')[2].toLowerCase())).then((result) => {
-			if(result[0]){
-				res.render('user.njk', Object.assign(result[0], njkconf));
+			if(tryDecode(req.cookies.Authorization)) {
+				res.render('live.njk', Object.assign({list: result}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
 			}
-			else res.render('404.njk', njkconf);
+			else res.render('live.njk', Object.assign({list: result}, njkconf));
+			//res.render('live.njk', Object.assign({list: result}, njkconf));
 		});
 	});
-	app.get('/vods/*', (req, res) => {
-		db.query('select username from user_meta where username='+db.raw.escape(req.url.split('/')[2].toLowerCase())).then((result) => {
+	app.get('/users/:user', (req, res) => {
+		db.query('select username,title,about from user_meta where username='+db.raw.escape(req.params.user)).then((result) => {
 			if(result[0]){
-				fs.readdir('./site/live/'+njkconf.user, {withFileTypes: true} , (err, files) => {
-					res.render('vods.njk', Object.assign({user: result[0].username, list: files.filter(fn => fn.name.endsWith('.mp4'))}, njkconf));
+				if(tryDecode(req.cookies.Authorization)) {
+					res.render('user.njk', Object.assign(result[0], {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+				}
+				else res.render('user.njk', Object.assign(result[0], njkconf));
+				//res.render('user.njk', Object.assign(result[0], njkconf));
+			}
+			else if(tryDecode(req.cookies.Authorization)) {
+				res.status(404).render('404.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+			}
+			else res.status(404).render('404.njk', njkconf);
+		});
+	});
+	app.get('/vods/:user', (req, res) => {
+		db.query('select username from user_meta where username='+db.raw.escape(req.params.user)).then((result) => {
+			if(result[0]){
+				fs.readdir('./site/live/'+result[0].username, {withFileTypes: true} , (err, files) => {
+					if(tryDecode(req.cookies.Authorization)) {
+						res.render('vods.njk', Object.assign({user: result[0].username, list: files.filter(fn => fn.name.endsWith('.mp4'))}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+					}
+					else res.render('vods.njk', Object.assign({user: result[0].username, list: files.filter(fn => fn.name.endsWith('.mp4'))}, njkconf));
+					//res.render('vods.njk', Object.assign({user: result[0].username, list: files.filter(fn => fn.name.endsWith('.mp4'))}, njkconf));
 				});
 			}
-			else res.render('404.njk', njkconf);
+			else if(tryDecode(req.cookies.Authorization)) {
+				res.status(404).render('404.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+			}
+			else res.status(404).render('404.njk', njkconf);
 		});
 	});
+	app.get('/login', (req, res) => {
+		if(tryDecode(req.cookies.Authorization)) {
+			res.redirect(njkconf.rootredirect);
+		}
+		else res.render('login.njk',njkconf);
+	});
 	app.get('/register', (req, res) => {
-		res.render('registration.njk', njkconf);
+		if(tryDecode(req.cookies.Authorization) || !openReg) {
+			res.redirect(njkconf.rootredirect);
+		}
+		else res.render('registration.njk',njkconf);
 	});
 	app.get('/profile', (req, res) => {
-		res.render('profile.njk', njkconf);
+		if(tryDecode(req.cookies.Authorization)) {
+			res.render('profile.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+		}
+		else res.redirect(njkconf.rootredirect);
 	});
 	app.get('/changepwd', (req, res) => {
-		res.render('changepwd.njk', njkconf);
-	});
-	app.get('/changesk', (req, res) => {
-		res.render('changesk.njk', njkconf);
+		if(tryDecode(req.cookies.Authorization)) {
+			res.render('changepwd.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+		}
+		else res.redirect(njkconf.rootredirect);
 	});
 	app.get('/chat', (req, res) => {
 		res.render('chat.html', njkconf);
 	});
 	app.get('/help', (req, res) => {
-		res.render('help.njk', njkconf);
+		if(tryDecode(req.cookies.Authorization)) {
+			res.render('help.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+		}
+		else res.render('help.njk',njkconf);
 	});
-	//api handlers
-	app.post('/api/register', (req, res) => {
-		api.register(req.body.username, req.body.password, req.body.confirm).then( (result) => {
-			res.send(result);
-		});
-	});
-	app.post('/api/user', (req, res) => {
-		api.update(req.body.username, req.body.password, req.body.title, req.body.bio, req.body.record).then((result) => {
-			res.send(result);
-		});
-	});
-	app.post('/api/user/password', (req, res) => {
-		api.changepwd(req.body.username, req.body.password, req.body.newpassword).then((result) => {
-			res.send(result);
-		});
-	});
-	app.post('/api/user/streamkey', (req, res) => {
-		api.changesk(req.body.username, req.body.password).then((result) => {
-			res.send(result);
-		})
-	});
-	//static files if nothing else matches first
-	app.use(express.static('site'));
-	//404 Handler
-	app.use(function (req, res, next) {
-		res.status(404).render('404.njk', njkconf);
-	});
+}
+
+async function initChat(ircconf: any) {
 	//irc peering
 	if(ircconf.enable){
 		await irc.connect({
@@ -190,26 +402,6 @@ async function init(satyr: any, port: number, ircconf: any){
 			else socket.emit('ALERT', 'Not authorized to do that.');
 		});
 	});
-	server.listen(port);
-}
-
-async function newNick(socket) {
-	//i just realized how shitty of an idea this is
-	let n: string = 'Guest'+Math.floor(Math.random() * Math.floor(1000));
-	if(store.get(n)) return newNick(socket);
-	else {
-		store.set(n, socket.id);
-		return n;
-	}
-}
-async function chgNick(socket, nick) {
-	let rooms = Object.keys(socket.rooms);
-	for(let i=1;i<rooms.length;i++){
-		io.to(rooms[i]).emit('ALERT', socket.nick+' is now known as '+nick);
-	}
-	store.rm(socket.nick);
-	store.set(nick, socket.id);
-	socket.nick = nick;
 }
 
 export { init };

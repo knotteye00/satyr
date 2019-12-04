@@ -77,7 +77,7 @@ function init (mediaconfig: any, satyrconfig: any) {
 		if(app === satyrconfig.privateEndpoint) {
 			db.query('update user_meta,users set user_meta.live=false where users.stream_key='+db.raw.escape(key));
 			db.query('select username from users where stream_key='+db.raw.escape(key)+' limit 1').then(async (results) => {
-				keystore.rm(results[0].username);
+				if(results[0]) keystore.rm(results[0].username);
 			});
 
 		}

@@ -51,3 +51,8 @@ record = false
 publicEndpoint = 'live'
 privateEndpoint = 'stream'
 ffmpeg = ''
+
+[transcode]
+adapative = false
+variants = 3
+format = 'dash'

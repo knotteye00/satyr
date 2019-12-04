@@ -1,0 +1,10 @@
+{% extends "base.njk" %}
+{% block content %}
+<h3>Log in to {{ sitename }}</h3><span style="font-size: small;">Not registered yet? Sign up <a href="/register">here</a>.</br></br></span>
+			<form action="/api/login" method="POST" target="responseFrame">
+				Username: </br><input type="text" name="username" style="min-width: 300px" placeholder="e.g. lain"/></br>
+        		Password: </br><input type="password" name="password" style="min-width: 300px"/></br>
+				<input type="submit" value="Submit">
+			</form>
+			<iframe name="responseFrame" border="0" frameborder="0" style="display: inline;"></iframe>
+{% endblock %}
