@@ -32,7 +32,7 @@ async function init(satyr: any, port: number, ircconf: any){
 	njk.configure('templates', {
 		autoescape	: true,
 		express   	: app,
-		watch		: true
+		watch		: false
 	});
 	njkconf ={
 		sitename: satyr.name,
@@ -288,7 +288,7 @@ async function initSite(openReg) {
 	});
 	app.get('/login', (req, res) => {
 		if(tryDecode(req.cookies.Authorization)) {
-			res.redirect(njkconf.rootredirect);
+			res.redirect('/profile');
 		}
 		else res.render('login.njk',njkconf);
 	});
@@ -302,13 +302,13 @@ async function initSite(openReg) {
 		if(tryDecode(req.cookies.Authorization)) {
 			res.render('profile.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
 		}
-		else res.redirect(njkconf.rootredirect);
+		else res.redirect('/login');
 	});
 	app.get('/changepwd', (req, res) => {
 		if(tryDecode(req.cookies.Authorization)) {
 			res.render('changepwd.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
 		}
-		else res.redirect(njkconf.rootredirect);
+		else res.redirect('/login');
 	});
 	app.get('/chat', (req, res) => {
 		res.render('chat.html', njkconf);
