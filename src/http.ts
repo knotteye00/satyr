@@ -1,7 +1,6 @@
 import * as express from "express";
 import * as njk from "nunjucks";
 import * as bodyparser from "body-parser";
-import * as fs from "fs";
 import * as socketio from "socket.io";
 import * as http from "http";
 import * as cookies from "cookie-parser";
@@ -9,7 +8,7 @@ import * as dirty from "dirty";
 import * as api from "./api";
 import * as db from "./database";
 import * as irc from "./irc";
-import { readFileSync, writeFileSync } from "fs";
+import { readdir, readFileSync, writeFileSync } from "fs";
 import { JWT, JWK } from "jose";
 import { strict } from "assert";
 import { parse } from "path";
@@ -280,7 +279,7 @@ async function initSite(openReg) {
 	app.get('/vods/:user', (req, res) => {
 		db.query('select username from user_meta where username='+db.raw.escape(req.params.user)).then((result) => {
 			if(result[0]){
-				fs.readdir('./site/live/'+result[0].username, {withFileTypes: true} , (err, files) => {
+				readdir('./site/live/'+result[0].username, {withFileTypes: true} , (err, files) => {
 					if(tryDecode(req.cookies.Authorization)) {
 						res.render('vods.njk', Object.assign({user: result[0].username, list: files.filter(fn => fn.name.endsWith('.mp4'))}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
 					}
