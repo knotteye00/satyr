@@ -13,6 +13,7 @@ import { readFileSync, writeFileSync } from "fs";
 import { JWT, JWK } from "jose";
 import { strict } from "assert";
 import { parse } from "path";
+import { isBuffer } from "util";
 
 const app = express();
 const server = http.createServer(app);
@@ -77,13 +78,13 @@ async function newNick(socket, skip?: boolean) {
 	}
 }
 
-async function chgNick(socket, nick) {
+async function chgNick(socket, nick, f?: boolean) {
 	let rooms = Object.keys(socket.rooms);
 	for(let i=1;i<rooms.length;i++){
 		io.to(rooms[i]).emit('ALERT', socket.nick+' is now known as '+nick);
 	}
-	store.rm(socket.nick);
-	store.set(nick, socket.id);
+	if(store.get(socket.nick)) store.rm(socket.nick);
+	if (!f) store.set(nick, socket.id);
 	socket.nick = nick;
 }
 
@@ -195,7 +196,7 @@ async function initAPI() {
 			if(t) {
 				if(t['exp'] - 86400 < Math.floor(Date.now() / 1000)){
 					return genToken(t['username']).then((t) => {
-						res.cookie('Authorization', t);
+						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true});
 						res.send('{"success":""}');
 						return;
 					});
@@ -214,7 +215,7 @@ async function initAPI() {
 			api.login(req.body.username, req.body.password).then((result) => {
 				if(!result){
 					genToken(req.body.username).then((t) => {
-						res.cookie('Authorization', t);
+						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true});
 						res.send('{"success":""}');
 					})
 				}
@@ -348,6 +349,21 @@ async function initChat(ircconf: any) {
 			}
 			else socket.emit('ALERT', 'Room does not exist');
 		});
+		socket.on('LIST', (data) => {
+			let str = "";
+			let client;
+			io.in(data.room).clients((err, clients) => {
+				if(err) throw err;
+				if(clients === []) {
+					socket.emit('LIST', 'The room is empty.');
+					return;
+				}
+				for(let i=0;i<clients.length;i++) {
+					str += io.sockets.connected[clients[i]].nick+', ';
+				}
+				socket.emit('LIST', str.substring(0, str.length - 2));
+			});
+		});
 		socket.on('LEAVEROOM', (data) => {
 			socket.leave(data);
 			if(ircconf.enable) irc.part(socket.nick, data);
@@ -375,7 +391,7 @@ async function initChat(ircconf: any) {
 					return false;
 				}
 				if(await db.validatePassword(data.nick, data.password)){
-					chgNick(socket, data.nick);
+					chgNick(socket, data.nick, true);
 				}
 				else socket.emit('ALERT','Incorrect username or password');
 			}
