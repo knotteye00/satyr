@@ -29,7 +29,7 @@ try{
 }
 var njkconf;
 
-async function init(satyr: any, port: number, ircconf: any){
+async function init(satyr: any, http: object, ircconf: any){
 	njk.configure('templates', {
 		autoescape	: true,
 		express   	: app,
@@ -45,6 +45,13 @@ async function init(satyr: any, port: number, ircconf: any){
 	app.use(cookies());
 	app.use(bodyparser.json());
 	app.use(bodyparser.urlencoded({ extended: true }));
+	if(http['hsts']){
+		app.use((req, res, next) => {
+			res.append('Strict-Transport-Security', 'max-age=5184000');
+			next();
+		});
+	}
+	app.disable('x-powered-by');
 	//site handlers
 	await initSite(satyr.registration);
 	//api handlers
@@ -60,7 +67,7 @@ async function init(satyr: any, port: number, ircconf: any){
 		//res.status(404).render('404.njk', njkconf);
 	});
 	await initChat(ircconf);
-	server.listen(port);
+	server.listen(http['port']);
 }
 
 async function newNick(socket, skip?: boolean) {
@@ -137,7 +144,7 @@ async function initAPI() {
 	app.post('/api/register', (req, res) => {
 		api.register(req.body.username, req.body.password, req.body.confirm).then( (result) => {
 			if(result[0]) return genToken(req.body.username).then((t) => {
-				res.cookie('Authorization', t);
+				res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
 				res.send(result);
 				return;
 			});
@@ -196,7 +203,7 @@ async function initAPI() {
 			if(t) {
 				if(t['exp'] - 86400 < Math.floor(Date.now() / 1000)){
 					return genToken(t['username']).then((t) => {
-						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true});
+						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
 						res.send('{"success":""}');
 						return;
 					});
@@ -215,7 +222,7 @@ async function initAPI() {
 			api.login(req.body.username, req.body.password).then((result) => {
 				if(!result){
 					genToken(req.body.username).then((t) => {
-						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true});
+						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
 						res.send('{"success":""}');
 					})
 				}

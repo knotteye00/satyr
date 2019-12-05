@@ -59,7 +59,7 @@ async function run() {
 	db.init(dbcfg, bcryptcfg);
 	await cleanup.init();
 	api.init(satyr);
-	http.init(satyr, config.server.http.port, config.ircd);
+	http.init(satyr, config.server.http, config.ircd);
 	mediaserver.init(nms, satyr);
 	console.log(`Satyr v${process.env.npm_package_version} ready`);
 }
