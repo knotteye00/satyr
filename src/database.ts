@@ -45,8 +45,12 @@ async function query(query: string){
 }
 
 async function validatePassword(username: string, password: string){
-	let pass: any = await query('select password_hash from users where username='+raw.escape(username)+' limit 1');
-	return await bcrypt.compare(password, pass[0].password_hash.toString());
+	try {
+		let pass: any = await query('select password_hash from users where username='+raw.escape(username)+' limit 1');
+		return await bcrypt.compare(password, pass[0].password_hash.toString());
+	} catch(e) {
+		return false;
+	}
 }
 
 async function hash(pwd){
