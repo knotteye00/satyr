@@ -1,14 +1,15 @@
 {% extends "base.njk" %}
 {% block content %}
-<h3>Update your profile on {{ sitename }}</h3><span style="font-size: small;">Not registered yet? Sign up <a href="/register">here</a>.</br> Change your <a href="/changepwd">password</a> or <a href="/changesk">stream key</a>.</span>
+<h3>Update your profile on {{ sitename }}</h3><span style="font-size: small;">Or, change your <a href="/changepwd">password</a>.</span>
 <p></p>
-	<form action="/api/user" method="POST" target="responseFrame">
-		Username: </br><input type="text" name="username" style="min-width: 300px" placeholder="e.g. lain"/></br>
-   		Password: </br><input type="password" name="password" style="min-width: 300px"/></br>
+	<form action="/api/user/update" method="POST" target="responseFrame">
 		Stream Title: </br><input type="text" name="title" style="min-width: 300px"/></br>
 		Bio: </br><input type="text" name="bio" style="min-width: 300px; min-height: 150px;"/></br>
-		Record VODs: <input type="checkbox" name="record" value="true"></br>
-		<input type="submit" value="Submit">
+		Record VODs: <input type="radio" name="record" value="true"> Yes<input type="radio" name="record" value="false" /> No</br></br>
+		<input type="submit" value="Update Profile">
+	</form></br>
+	<form action="/api/user/streamkey" method="POST" target="responseFrame">
+		<input type="submit" value="Request New Stream Key">
 	</form>
 	<iframe name="responseFrame" border="0" frameborder="0" style="display: inline;"></iframe>
 {% endblock %}

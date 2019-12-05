@@ -33,6 +33,9 @@
         else if(m.startsWith('/kick')){
           socket.emit('KICK', {nick: m.split(' ')[1], room: room});
         }
+        else if(m.startsWith('/list')){
+          socket.emit('LIST', {room: room});
+        }
         else socket.emit('MSG', {room: room, msg: m});
         document.getElementById('m').value = '';
       }
@@ -50,6 +53,10 @@
       });
       socket.on('LEFT', function(data){
         document.getElementById('messages').innerHTML+='<li><i>'+data.nick+' has left the chat</i></li>';
+        window.scrollTo(0,document.body.scrollHeight);
+      });
+      socket.on('LIST', function(data){
+        document.getElementById('messages').innerHTML+='<li><i>'+data+'</i></li>';
         window.scrollTo(0,document.body.scrollHeight);
       });
       function getUrlParameter(name) {
@@ -71,7 +78,7 @@
   </head>
   <body>
     <div id="wrapper">
-    <ul id="messages"></ul><li>&nbsp;</li><li>&nbsp;</li>
+    <ul id="messages"></ul><li style="list-style-type: none; margin: 0; padding: 5px 10px;">&nbsp;</li><li style="list-style-type: none; margin: 0; padding: 5px 10px;">&nbsp;</li>
     </div>
     <form id="f" action="" onSubmit="send(); return false">
       <input id="m" autocomplete="off" /><button><img src="/send.png" alt="send" width="15px" style="display: inline-block;"></img></button>

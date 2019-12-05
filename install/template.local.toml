@@ -8,6 +8,10 @@ registration = false
 record = false
 ffmpeg = '<ffmpeg>'
 
+[server.http]
+# uncomment to set HSTS when SSL is enabled
+# hsts = true
+
 [database]
 user = '<dbuser>'
 password = '<dbpass>'

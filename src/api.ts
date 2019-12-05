@@ -1,4 +1,5 @@
 import * as db from "./database"
+import { unregisterUser } from "./irc";
 
 var config: any;
 function init(conf: object){
@@ -20,18 +21,26 @@ async function register(name: string, password: string, confirm: string) {
 	return {"error":""};
 }
 
-async function update(name: string, password: string, title: string, bio: string, record: boolean){
-	if(!name || !password) return {"error":"Insufficient parameters"};
-	let auth: boolean = await db.validatePassword(name, password);
-	if(!auth) return {"error":"Username or Password Incorrect"};
-	await db.query('UPDATE user_meta set title='+db.raw.escape(title)+', about='+db.raw.escape(bio)+' where username='+db.raw.escape(name));
-	if(!record) await db.query('UPDATE users set record_flag=false where username='+db.raw.escape(name));
-	else await db.query('UPDATE users set record_flag=true where username='+db.raw.escape(name));
+async function update(fields: object){
+	if(!fields['title'] && !fields['bio'] && (fields['rec'] !== 'true' && fields['rec'] !== 'false')) return {"error":"no valid fields specified"};
+	let qs: string = "";
+	let f: boolean = false;
+	if(fields['title']) {qs += ' user_meta.title='+db.raw.escape(fields['title']);f = true;}
+	if(fields['bio']) {
+		if(f) qs+=',';
+		qs += ' user_meta.about='+db.raw.escape(fields['bio']);
+		f=true;
+	}
+	if(typeof(fields['rec']) === 'boolean' || typeof(fields['rec']) === 'number') {
+		if(f) qs+=',';
+		qs += ' users.record_flag='+db.raw.escape(fields['rec']);
+	}
+	await db.query('UPDATE users,user_meta SET'+qs+' WHERE users.username='+db.raw.escape(fields['name'])+' AND user_meta.username='+db.raw.escape(fields['name']));
 	return {"success":""};
 }
 
 async function changepwd(name: string, password: string, newpwd: string){
-	if(!name || !password) return {"error":"Insufficient parameters"};
+	if(!name || !password || !newpwd) return {"error":"Insufficient parameters"};
 	let auth: boolean = await db.validatePassword(name, password);
 	if(!auth) return {"error":"Username or Password Incorrect"};
 	let newhash: string = await db.hash(newpwd);
@@ -39,13 +48,17 @@ async function changepwd(name: string, password: string, newpwd: string){
 	return {"success":""};
 }
 
-async function changesk(name: string, password: string){
-	if(!name || !password) return {"error":"Insufficient parameters"};
-	let auth: boolean = await db.validatePassword(name, password);
-	if(!auth) return {"error":"Username or Password Incorrect"};
+async function changesk(name: string){
 	let key: string = await db.genKey();
 	await db.query('UPDATE users set stream_key='+db.raw.escape(key)+'where username='+db.raw.escape(name)+' limit 1');
 	return {"success":key};
 }
 
-export { init, register, update, changepwd, changesk };
+async function login(name: string, password: string){
+	if(!name || !password) return {"error":"Insufficient parameters"};
+	let auth: boolean = await db.validatePassword(name, password);
+	if(!auth) return {"error":"Username or Password Incorrect"};
+	return false;
+}
+
+export { init, register, update, changepwd, changesk, login };
