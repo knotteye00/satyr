@@ -53,8 +53,8 @@ async function run() {
 			api: config.server.api,
 			api_user: config.server.api_user,
 			api_pass: config.server.api_pass
-		}
-		
+		},
+		transcode: config.transcode
 	};
 	db.init(dbcfg, bcryptcfg);
 	await cleanup.init();

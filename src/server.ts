@@ -34,14 +34,14 @@ function init (mediaconfig: any, satyrconfig: any) {
 		//otherwise kill the session
 		db.query('select username,record_flag from users where stream_key='+db.raw.escape(key)+' limit 1').then(async (results) => {
 			if(results[0]){
-				//push to rtmp
-				//execFile(satyrconfig.ffmpeg, ['-loglevel', 'fatal', '-analyzeduration', '0', '-i', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key, '-vcodec', 'copy', '-acodec', 'copy', '-crf', '18', '-f', 'flv', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.publicEndpoint+'/'+results[0].username], {maxBuffer: Infinity});
-				//push to mpd after making sure directory exists
+				//transcode to mpd after making sure directory exists
 				keystore[results[0].username] = key;
 				mkdir(satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username, { recursive : true }, ()=>{;});
 				while(true){
 					if(session.audioCodec !== 0 && session.videoCodec !== 0){
-						execFile(satyrconfig.ffmpeg, ['-loglevel', 'fatal', '-y', '-i', 'rtmp://127.0.0.1:'+mediaconfig.rtmp.port+'/'+satyrconfig.privateEndpoint+'/'+key, '-map', '0:2', '-map', '0:2', '-map', '0:2', '-map', '0:1', '-c:a', 'copy', '-c:v:0', 'copy', '-c:v:1', 'libx264', '-c:v:2', 'libx264', '-crf:1', '33', '-crf:2', '40', '-b:v:1', '3000K', '-b:v:2', '1500K', '-remove_at_exit', '1', '-seg_duration', '1', '-window_size', '30', '-f', 'dash', satyrconfig.directory+'/'+satyrconfig.publicEndpoint+'/'+results[0].username+'/index.mpd'], {maxBuffer: Infinity});
+						transCommand(mediaconfig, satyrconfig, results[0].username, key).then((r) => {
+							execFile(satyrconfig.ffmpeg, r, {maxBuffer: Infinity});
+						});
 						break;
 					}
 					await sleep(300);
@@ -108,5 +108,34 @@ function init (mediaconfig: any, satyrconfig: any) {
 			}
 		}
 	});
+}
+
+async function transCommand(config: object, satyrconfig: object, user: string, key: string): Promise<string[]>{
+	let args: string[] = ['-loglevel', 'fatal', '-y', '-i', 'rtmp://127.0.0.1:'+config['rtmp']['port']+'/'+satyrconfig['privateEndpoint']+'/'+key];
+	if(config['transcode']['adaptive']===true && config['transcode']['variants'] > 1) {
+		for(let i=0;i<config['transcode']['variants'];i++){
+			args = args.concat(['-map', '0:2']);
+		}
+		args = args.concat(['-map', '0:1', '-c:a', 'copy', '-c:v:0', 'copy']);
+		for(let i=1;i<config['transcode']['variants'];i++){
+			args = args.concat(['-c:v:'+i, 'libx264',]);
+		}
+		for(let i=1;i<config['transcode']['variants'];i++){
+			let crf: number = Math.floor(18 + (i * 8)) > 51 ? 51 : Math.floor(18 + (i * 7));
+			args = args.concat(['-crf:'+i, ''+crf]);
+		}
+		for(let i=1;i<config['transcode']['variants'];i++){
+			let bv: number = Math.floor((5000 / config['transcode']['variants']) * (config['transcode']['variants'] - i));
+			args = args.concat(['-b:v:'+i, ''+bv]);
+		}
+	}
+	else {
+		args = args.concat(['-c:a', 'copy', '-c:v', 'copy']);
+	}
+	if(config['transcode']['format'] === 'dash')
+	args = args.concat(['-remove_at_exit', '1', '-seg_duration', '1', '-window_size', '30', '-f', 'dash', satyrconfig['directory']+'/'+satyrconfig['publicEndpoint']+'/'+user+'/index.mpd']);
+	else if(config['transcode']['format'] === 'hls')
+	args = args.concat(['-remove_at_exit', '1', '-hls_time', '1', '-hls_list_size', '30', '-f', 'hls', satyrconfig['directory']+'/'+satyrconfig['publicEndpoint']+'/'+user+'/index.m3u8']);
+	return args;
 }
 export { init };
