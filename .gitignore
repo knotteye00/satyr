@@ -3,5 +3,6 @@ site/live
 config/local.toml
 config/jwt.pem
 config/generated.toml
+config/bans.db
 install/db_setup.sql
 build/**

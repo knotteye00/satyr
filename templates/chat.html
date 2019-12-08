@@ -36,6 +36,24 @@
         else if(m.startsWith('/list')){
           socket.emit('LIST', {room: room});
         }
+        else if(m.startsWith('/banlist')){
+          socket.emit('LISTBAN', {
+            room: room,
+          });
+        }
+        else if(m.startsWith('/ban')){
+          socket.emit('BAN', {
+            room: room,
+            nick: m.split(' ')[1],
+            time: (1 * m.split(' ')[2])
+          });
+        }
+        else if(m.startsWith('/unban')){
+          socket.emit('UNBAN', {
+            room: room,
+            ip: m.split(' ')[1]
+          });
+        }
         else socket.emit('MSG', {room: room, msg: m});
         document.getElementById('m').value = '';
       }

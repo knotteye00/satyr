@@ -5,6 +5,7 @@ import * as socketio from "socket.io";
 import * as http from "http";
 import * as cookies from "cookie-parser";
 import * as dirty from "dirty";
+import * as socketSpam from "socket-anti-spam";
 import * as api from "./api";
 import * as db from "./database";
 import * as irc from "./irc";
@@ -18,6 +19,8 @@ const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 const store = dirty();
+var banlist;
+var ircconf;
 var jwkey;
 try{
 	jwkey = JWK.asKey(readFileSync('./config/jwt.pem'));
@@ -28,7 +31,8 @@ try{
 }
 var njkconf;
 
-async function init(satyr: any, http: object, ircconf: any){
+async function init(satyr: any, http: object, irc: any){
+	ircconf = irc;
 	njk.configure('templates', {
 		autoescape	: true,
 		express   	: app,
@@ -65,19 +69,22 @@ async function init(satyr: any, http: object, ircconf: any){
 		else res.status(404).render('404.njk', njkconf);
 		//res.status(404).render('404.njk', njkconf);
 	});
-	await initChat(ircconf);
+	banlist = new dirty('./config/bans.db').on('load', () => {initChat()});
 	server.listen(http['port']);
 }
 
-async function newNick(socket, skip?: boolean) {
+async function newNick(socket, skip?: boolean, i?: number) {
 	if(socket.handshake.headers['cookie'] && !skip){
 		let c = await parseCookie(socket.handshake.headers['cookie']);
 		let t = await validToken(c['Authorization']);
-		if(t) return t['username'];
+		if(t) {
+			store.set(t, socket.id);
+			return t['username'];
+		}
 	}
-	//i just realized how shitty of an idea this is
-	let n: string = 'Guest'+Math.floor(Math.random() * Math.floor(1000));
-	if(store.get(n)) return newNick(socket, true);
+	if(!i) i = 10;
+	let n: string = 'Guest'+Math.floor(Math.random() * Math.floor(i));
+	if(store.get(n)) return newNick(socket, true, Math.floor(i * 10));
 	else {
 		store.set(n, socket.id);
 		return n;
@@ -90,7 +97,7 @@ async function chgNick(socket, nick, f?: boolean) {
 		io.to(rooms[i]).emit('ALERT', socket.nick+' is now known as '+nick);
 	}
 	if(store.get(socket.nick)) store.rm(socket.nick);
-	if (!f) store.set(nick, socket.id);
+	store.set(nick, socket.id);
 	socket.nick = nick;
 }
 
@@ -328,7 +335,7 @@ async function initSite(openReg) {
 	});
 }
 
-async function initChat(ircconf: any) {
+async function initChat() {
 	//irc peering
 	if(ircconf.enable){
 		await irc.connect({
@@ -349,6 +356,15 @@ async function initChat(ircconf: any) {
 		socket.on('JOINROOM', async (data) => {
 			let t: any = await db.query('select username from users where username='+db.raw.escape(data));
 			if(t[0]){
+				if(banlist.get(data) && banlist.get(data)[socket.ip]){
+					if(Math.floor(banlist.get(data)[socket.ip]['time'] + (banlist.get(data)[socket.ip]['length'] * 60)) < Math.floor(Date.now() / 1000)){
+						banlist.set('data', Object.assign(banlist['data'], {[socket.ip]: null}));
+					}
+					else {
+						socket.emit('ALERT', 'You are banned from that room');
+						return;
+					}
+				}
 				socket.join(data);
 				io.to(data).emit('JOINED', {nick: socket.nick});
 				if(ircconf.enable) irc.join(socket.nick, data);
@@ -386,10 +402,6 @@ async function initChat(ircconf: any) {
 		});
 		socket.on('NICK', async (data) => {
 			data.nick = data.nick.replace(' ','');
-			if(store.get(data.nick)){
-				socket.emit('ALERT', 'Nickname is already in use');
-				return false;
-			}
 			let user = await db.query('select username from users where username='+db.raw.escape(data.nick));
 			if(user[0]){
 				if(!data.password){
@@ -402,6 +414,10 @@ async function initChat(ircconf: any) {
 				else socket.emit('ALERT','Incorrect username or password');
 			}
 			else {
+				if(store.get(data.nick)){
+					socket.emit('ALERT', 'Nickname is already in use');
+					return false;
+				}
 				chgNick(socket, data.nick);
 			}
 		});
@@ -423,6 +439,63 @@ async function initChat(ircconf: any) {
 			}
 			else socket.emit('ALERT', 'Not authorized to do that.');
 		});
+		socket.on('BAN', (data: Object) => {
+			if(socket.nick === data['room']){
+				let id: string = store.get(data['nick']);
+				if(id){
+					let target = io.sockets.connected[id];
+					if(typeof(data['time']) === 'number' && (data['time'] !== 0 || data['time'] !== NaN)) banlist.set(data['room'], Object.assign({[target.ip]: {time: Math.floor(Date.now() / 1000), length: data['time']}}, banlist.get(data['room'])));
+					else banlist.set(data['room'], Object.assign({[target.ip]: {time: Math.floor(Date.now() / 1000), length: 30}}, banlist.get(data['room'])));
+					target.disconnect(true);
+					io.to(data['room']).emit('ALERT', target.nick+' was banned.');
+				}
+				else socket.emit('ALERT', 'No such user found.');
+			}
+			else socket.emit('ALERT', 'Not authorized to do that.');
+		});
+		socket.on('UNBAN', (data: Object) => {
+			if(socket.nick === data['room']){
+				if(banlist.get(data['room']) && banlist.get(data['room'])[data['ip']]){
+					banlist.set(data['room'], Object.assign(banlist.get(data['room']), {[data['ip']]: null}));
+					socket.emit('ALERT', data['ip']+' was unbanned.');
+				}
+				else
+				socket.emit('ALERT', 'That IP is not banned.');
+			}
+			else socket.emit('ALERT', 'Not authorized to do that.');
+		});
+		socket.on('LISTBAN', (data: Object) => {
+			if(socket.nick === data['room']){
+				if(banlist.get(data['room'])) {
+					let bans = Object.keys(banlist.get(data['room']));
+					let str = '';
+					for(let i=0;i<bans.length;i++){
+						str += bans[i]+', ';
+					}
+					socket.emit('ALERT', 'Banned IP adresses: '+str.substring(0, str.length - 2));
+					return;
+				}
+				socket.emit('ALERT', 'No one is banned from this room');
+			}
+			else socket.emit('ALERT', 'Not authorized to do that.');
+		});
+	});
+	//socketio spam
+	const socketAS = new socketSpam({
+		banTime:            20,
+		kickThreshold:      10,
+		kickTimesBeforeBan: 3,
+		banning:            true,
+		io:                 io
+	});
+	socketAS.event.on('ban', (socket) => {
+		let rooms = Object.keys(socket.rooms);
+		for(let i=1;i<rooms.length;i++){
+			if(ircconf.enable) irc.part(socket.nick, rooms[i]);
+			io.to(rooms[i]).emit('ALERT', socket.nick+' was banned.');
+		}
+		if(ircconf.enable) irc.unregisterUser(socket.nick);
+		store.rm(socket.nick);
 	});
 }
 
