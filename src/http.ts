@@ -78,7 +78,7 @@ async function newNick(socket, skip?: boolean, i?: number) {
 		let c = await parseCookie(socket.handshake.headers['cookie']);
 		let t = await validToken(c['Authorization']);
 		if(t) {
-			store.set(t, socket.id);
+			store.set(t['username'], socket.id);
 			return t['username'];
 		}
 	}
@@ -356,9 +356,9 @@ async function initChat() {
 		socket.on('JOINROOM', async (data) => {
 			let t: any = await db.query('select username from users where username='+db.raw.escape(data));
 			if(t[0]){
-				if(banlist.get(data) && banlist.get(data)[socket.ip]){
-					if(Math.floor(banlist.get(data)[socket.ip]['time'] + (banlist.get(data)[socket.ip]['length'] * 60)) < Math.floor(Date.now() / 1000)){
-						banlist.set('data', Object.assign(banlist['data'], {[socket.ip]: null}));
+				if(banlist.get(data) && banlist.get(data)[socket['handshake']['address']]){
+					if(Math.floor(banlist.get(data)[socket['handshake']['address']]['time'] + (banlist.get(data)[socket['handshake']['address']]['length'] * 60)) < Math.floor(Date.now() / 1000)){
+						banlist.set(data, Object.assign({}, banlist.get(data), {[socket['handshake']['address']]: null}));
 					}
 					else {
 						socket.emit('ALERT', 'You are banned from that room');
@@ -444,8 +444,8 @@ async function initChat() {
 				let id: string = store.get(data['nick']);
 				if(id){
 					let target = io.sockets.connected[id];
-					if(typeof(data['time']) === 'number' && (data['time'] !== 0 || data['time'] !== NaN)) banlist.set(data['room'], Object.assign({[target.ip]: {time: Math.floor(Date.now() / 1000), length: data['time']}}, banlist.get(data['room'])));
-					else banlist.set(data['room'], Object.assign({[target.ip]: {time: Math.floor(Date.now() / 1000), length: 30}}, banlist.get(data['room'])));
+					if(typeof(data['time']) === 'number' && (data['time'] !== 0 || data['time'] !== NaN)) banlist.set(data['room'], Object.assign({}, banlist.get(data['room']), {[target.ip]: {time: Math.floor(Date.now() / 1000), length: data['time']}}));
+					else banlist.set(data['room'], Object.assign({}, banlist.get(data['room']), {[target.ip]: {time: Math.floor(Date.now() / 1000), length: 30}}));
 					target.disconnect(true);
 					io.to(data['room']).emit('ALERT', target.nick+' was banned.');
 				}
@@ -456,7 +456,7 @@ async function initChat() {
 		socket.on('UNBAN', (data: Object) => {
 			if(socket.nick === data['room']){
 				if(banlist.get(data['room']) && banlist.get(data['room'])[data['ip']]){
-					banlist.set(data['room'], Object.assign(banlist.get(data['room']), {[data['ip']]: null}));
+					banlist.set(data['room'], Object.assign({}, banlist.get(data['room']), {[data['ip']]: null}));
 					socket.emit('ALERT', data['ip']+' was unbanned.');
 				}
 				else
