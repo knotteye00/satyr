@@ -77,7 +77,7 @@ async function newNick(socket, skip?: boolean, i?: number) {
 		let c = await parseCookie(socket.handshake.headers['cookie']);
 		let t = await validToken(c['Authorization']);
 		if(t) {
-			store.set(t['username'], socket.id);
+			store.set(t['username'], [].concat(store.get(t['username']), socket.id).filter(item => item !== undefined));
 			return t['username'];
 		}
 	}
@@ -99,8 +99,8 @@ async function chgNick(socket, nick, f?: boolean) {
 		if(Array.isArray(store.get(socket.nick))) store.set(socket.nick, store.get(socket.nick).filter(item => item !== socket.id));
 		else store.rm(socket.nick);
 	}
-	if(f) store.set(nick, [].concat(store.get(nick), socket.id).filter(item => item !== undefined));
-	store.set(nick, socket.id);
+	if(f) store.set(nick, [].concat(store.get(nick), [socket.id]).filter(item => item !== undefined));
+	else store.set(nick, socket.id);
 	socket.nick = nick;
 }
 
@@ -415,7 +415,7 @@ async function initChat() {
 		});
 		socket.on('MSG', (data) => {
 			if(data.msg === "" || !data.msg.replace(/\s/g, '').length) return;
-			io.to(data.room).emit('MSG', {nick: socket.nick, msg: data.msg});
+			if(socket.rooms[data['room']]) io.to(data.room).emit('MSG', {nick: socket.nick, msg: data.msg});
 		});
 		socket.on('KICK', (data) => {
 			if(socket.nick === data.room){
@@ -423,13 +423,15 @@ async function initChat() {
 				let id: string = store.get(data.nick);
 				if(id){
 					if(Array.isArray(id)) {
-						for(let i=0;i<id.length+1;i++)
-							io.sockets.connected[id[i]].leave(data.room)
+						for(let i=0;i<id.length;i++){
+							io.sockets.connected[id[i]].leave(data.room);
+						}
+						io.in(data.room).emit('ALERT', data.nick+' has been kicked.');
 						return;
 					}
 					let target = io.sockets.connected[id];
 					io.in(data.room).emit('ALERT', data.nick+' has been kicked.');
-					target.disconnect(true);
+					target.leave(data.room);
 				}
 				else socket.emit('ALERT', 'No such user found.');
 			}
@@ -440,7 +442,7 @@ async function initChat() {
 				let id: string = store.get(data['nick']);
 				if(id){
 					if(Array.isArray(id)) {
-						for(let i=0;i<id.length+1;i++){
+						for(let i=0;i<id.length;i++){
 							let target = io.sockets.connected[id[i]];
 							if(typeof(data['time']) === 'number' && (data['time'] !== 0 && data['time'] !== NaN)) banlist.set(data['room'], Object.assign({}, banlist.get(data['room']), {[target.ip]: {time: Math.floor(Date.now() / 1000), length: data['time']}}));
 							else banlist.set(data['room'], Object.assign({}, banlist.get(data['room']), {[target.ip]: {time: Math.floor(Date.now() / 1000), length: 30}}));
