@@ -95,7 +95,11 @@ async function chgNick(socket, nick, f?: boolean) {
 	for(let i=1;i<rooms.length;i++){
 		io.to(rooms[i]).emit('ALERT', socket.nick+' is now known as '+nick);
 	}
-	if(store.get(socket.nick)) store.rm(socket.nick);
+	if(store.get(socket.nick)) {
+		if(Array.isArray(store.get(socket.nick))) store.set(socket.nick, store.get(socket.nick).filter(item => item !== socket.id));
+		else store.rm(socket.nick);
+	}
+	if(f) store.set(nick, [].concat(store.get(nick), socket.id).filter(item => item !== undefined));
 	store.set(nick, socket.id);
 	socket.nick = nick;
 }
@@ -336,12 +340,6 @@ async function initSite(openReg) {
 
 async function initChat() {
 	//set a cookie to request same nick
-	//apply same nick if the request comes from the same ip
-	//structure of entry in store should be:
-	// knotteye: {
-	//	ip: "127.0.0.1",
-	//	id: ["aklsjdnaksj", "asjdnaksjnd", "aksjdnkajs"]
-	//}
 	
 	//socket.io chat logic
 	io.on('connection', async (socket) => {
@@ -387,6 +385,11 @@ async function initChat() {
 			for(let i=1;i<rooms.length;i++){
 				io.to(rooms[i]).emit('ALERT', socket.nick+' disconnected');
 			}
+			if(Array.isArray(store.get(socket.nick))) {
+				store.set(socket.nick, store.get(socket.nick).filter(item => item !== socket.id))
+				if(store.get(socket.nick) !== [])
+				return;
+			}
 			store.rm(socket.nick);
 		});
 		socket.on('NICK', async (data) => {
@@ -419,6 +422,11 @@ async function initChat() {
 			//find client with data.nick
 				let id: string = store.get(data.nick);
 				if(id){
+					if(Array.isArray(id)) {
+						for(let i=0;i<id.length+1;i++)
+							io.sockets.connected[id[i]].leave(data.room)
+						return;
+					}
 					let target = io.sockets.connected[id];
 					io.in(data.room).emit('ALERT', data.nick+' has been kicked.');
 					target.disconnect(true);
@@ -431,10 +439,20 @@ async function initChat() {
 			if(socket.nick === data['room']){
 				let id: string = store.get(data['nick']);
 				if(id){
+					if(Array.isArray(id)) {
+						for(let i=0;i<id.length+1;i++){
+							let target = io.sockets.connected[id[i]];
+							if(typeof(data['time']) === 'number' && (data['time'] !== 0 && data['time'] !== NaN)) banlist.set(data['room'], Object.assign({}, banlist.get(data['room']), {[target.ip]: {time: Math.floor(Date.now() / 1000), length: data['time']}}));
+							else banlist.set(data['room'], Object.assign({}, banlist.get(data['room']), {[target.ip]: {time: Math.floor(Date.now() / 1000), length: 30}}));
+							target.leave(data['room']);
+						}
+						io.to(data['room']).emit('ALERT', data['nick']+' was banned.');
+						return;
+					}
 					let target = io.sockets.connected[id];
-					if(typeof(data['time']) === 'number' && (data['time'] !== 0 || data['time'] !== NaN)) banlist.set(data['room'], Object.assign({}, banlist.get(data['room']), {[target.ip]: {time: Math.floor(Date.now() / 1000), length: data['time']}}));
+					if(typeof(data['time']) === 'number' && (data['time'] !== 0 && data['time'] !== NaN)) banlist.set(data['room'], Object.assign({}, banlist.get(data['room']), {[target.ip]: {time: Math.floor(Date.now() / 1000), length: data['time']}}));
 					else banlist.set(data['room'], Object.assign({}, banlist.get(data['room']), {[target.ip]: {time: Math.floor(Date.now() / 1000), length: 30}}));
-					target.disconnect(true);
+					target.leave(data['room']);
 					io.to(data['room']).emit('ALERT', target.nick+' was banned.');
 				}
 				else socket.emit('ALERT', 'No such user found.');
