@@ -52,6 +52,9 @@ The following commands are available:
 `/nick kawen (password)` Password is only required if kawen is a registered user.
 `/join kawen` Join the chatroom for kawen's stream and leave the previous room.
 `/kick lain` Available only in your own room if you are a streamer. Forcefully disconnect the user.
+`/ban lain (time)` Ban a user from your room. Bans are based on IP address. The optional time is in minutes. The default is 30.
+`/banlist` List the IPs currently banned from your room.
+`/unban (ip)` self explanatory
 
 #### Streaming
 Users should stream to rtmp://example.tld/stream/examplestreamkey

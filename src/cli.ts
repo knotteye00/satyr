@@ -1,8 +1,7 @@
 import * as db from "./database"
 import * as flags from "flags";
-import * as config from "config"
 
-db.init(config.database, config.bcrypt);
+db.init();
 
 flags.defineString('adduser', '', 'User to add');
 flags.defineString('rmuser', '', 'User to remove');

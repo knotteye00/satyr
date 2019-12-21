@@ -2,8 +2,8 @@
 A more detailed walkthrough.
 
 ### System Dependencies
-Install ffmpeg and mysql through your distribution's package manager.
-See [this page](https://nodejs.org/en/download/package-manager/) for instructions on install node. Compatible versions are >=10. Nightly builds may fail to compile some of the native addons.
+Install ffmpeg(>= 4.2.1) and mysql through your distribution's package manager.
+See [this page](https://nodejs.org/en/download/package-manager/) for instructions on installing node. Compatible versions are >=10. Nightly builds may fail to compile some of the native addons.
 
 ### Installing Satyr
 Clone the repository and change to the directory
@@ -25,10 +25,9 @@ Run the setup script for the database.
 sudo mysql
 source install/db_setup.sql;
 ```
-Compile the code and start the server.
+Then start the server.
 ```bash
-npm run build
-npm start
+npm run start
 ```
 
 It is reccomended that you run Satyr behind a TLS terminating reverse proxy, like nginx.
@@ -40,10 +39,10 @@ Updating should be as simple as pulling the latest code and dependencies, then b
 ```bash
 git pull
 npm i
-npm run build
+npm update
 ```
 
 Then restart the server.
 
 ## Migrating Satyr
-To backup and restore, you will need to export the mysqlDB. Restore the new database from the backup, then copy the config/local.toml file and the site directory to the new install.
+To backup and restore, you will need to export the mysqlDB. Restore the new database from the backup, then copy config and site directories to the new location.

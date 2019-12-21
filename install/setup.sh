@@ -38,8 +38,8 @@ dbclient="${dbclient:='*'}"
 else
 dbclient="localhost"
 fi
-sed -e "s#<iname>#$name#g" -e "s#<domain>#$domain#g" -e "s#<ffmpeg>#$ffmpeg#g" -e "s#<dbuser>#$dbuser#g" -e "s#<dbname>#$dbname#g" -e "s#<dbpass>#$dbpass#g" -e "s#<dbhost>#$dbhost#g" -e "s#<email>#$email#g" install/template.local.toml > config/generated.toml
+sed -e "s#<iname>#$name#g" -e "s#<domain>#$domain#g" -e "s#<ffmpeg>#$ffmpeg#g" -e "s#<dbuser>#$dbuser#g" -e "s#<dbname>#$dbname#g" -e "s#<dbpass>#$dbpass#g" -e "s#<dbhost>#$dbhost#g" -e "s#<email>#$email#g" install/config.example.yml > config/generated.yml
 sed -e "s#<dbuser>#$dbuser#g" -e "s#<dbname>#$dbname#g" -e "s#<dbpass>#$dbpass#g" -e "s#<dbhost>#$dbhost#g" -e "s#<dbclient>#$dbclient#g" install/db_template.sql > install/db_setup.sql
 echo "A setup script for the database has been generated at install/db_setup.sql. Please run it by connecting to your database software and executing 'source install/db_setup.sql;''"
-echo "A default configuration file has been generated at config/generated.toml"
-echo "If everything looks fine, move it to config/local.toml and start your instance."
+echo "A default configuration file has been generated at config/generated.yml"
+echo "If everything looks fine, move it to config/config.yml and start your instance."

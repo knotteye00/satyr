@@ -1,20 +1,21 @@
 import * as mysql from "mysql";
 import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
+import { config } from "./config";
 import { resolve } from "url";
-var raw: any;
-var cryptoconfig: any;
+var raw;
+var cryptoconfig: Object;
 
-function init (db: object, bcrypt: object){
-	raw = mysql.createPool(db);
-	cryptoconfig = bcrypt;
+function init (){
+	raw = mysql.createPool(config['database']);
+	cryptoconfig = config['crypto'];
 }
 
 async function addUser(name: string, password: string){
 	//does not respect registration setting in config
 	if(password === '') return false;
 	let key: string = await genKey();
-	let hash: string = await bcrypt.hash(password, cryptoconfig.saltRounds);
+	let hash: string = await bcrypt.hash(password, cryptoconfig['saltRounds']);
 	let dupe = await query('select * from users where username='+raw.escape(name));
 	if(dupe[0]) return false;
 	await query('INSERT INTO users (username, password_hash, stream_key, record_flag) VALUES ('+raw.escape(name)+', '+raw.escape(hash)+', '+raw.escape(key)+', 0)');
@@ -54,7 +55,7 @@ async function validatePassword(username: string, password: string){
 }
 
 async function hash(pwd){
-	return await bcrypt.hash(pwd, cryptoconfig.saltRounds);
+	return await bcrypt.hash(pwd, cryptoconfig['saltRounds']);
 }
 
 export { query, raw, init, addUser, rmUser, validatePassword, hash, genKey };

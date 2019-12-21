@@ -1,17 +1,12 @@
 import * as db from "./database"
-import { unregisterUser } from "./irc";
-
-var config: any;
-function init(conf: object){
-	config = conf;
-}
+import { config } from "./config";
 
 async function register(name: string, password: string, confirm: string) {
-	if(!config.registration) return {"error":"registration disabled"};
+	if(!config['satyr']['registration']) return {"error":"registration disabled"};
 	if(name.includes(';') || name.includes(' ') || name.includes('\'')) return {"error":"illegal characters"};
 	if(password !== confirm) return {"error":"mismatched passwords"};
-	for(let i=0;i<config.restrictedNames.length;i++){
-		if (name === config.restrictedNames[i]) return {"error":"restricted name"};
+	for(let i=0;i<config['satyr']['restrictedNames'].length;i++){
+		if (name === config['satyr']['restrictedNames'][i]) return {"error":"restricted name"};
 	}
 	let r: boolean = await db.addUser(name, password);
 	if(r) {
@@ -61,4 +56,4 @@ async function login(name: string, password: string){
 	return false;
 }
 
-export { init, register, update, changepwd, changesk, login };
+export { register, update, changepwd, changesk, login };
