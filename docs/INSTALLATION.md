@@ -27,7 +27,7 @@ source install/db_setup.sql;
 ```
 Then start the server.
 ```bash
-npm start
+npm run start
 ```
 
 It is reccomended that you run Satyr behind a TLS terminating reverse proxy, like nginx.
@@ -45,4 +45,4 @@ npm update
 Then restart the server.
 
 ## Migrating Satyr
-To backup and restore, you will need to export the mysqlDB. Restore the new database from the backup, then copy config/local.toml, config/jwt.pem, and the site directory to the new location.
+To backup and restore, you will need to export the mysqlDB. Restore the new database from the backup, then copy config and site directories to the new location.

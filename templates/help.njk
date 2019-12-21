@@ -4,9 +4,12 @@
 <h4>Chatting</h4>
 The webclient for chat can be accessed on the streamer's page, or at <a href="https://{{ domain }}/chat">https://{{ domain }}/chat</a></br></br>
 The following commands are available:</br>
-`/nick kawen (password)` Password is only required if kawen is a registered user.</br>
-`/join kawen` Join the chatroom for kawen's stream and leave the previous room.</br>
-`/kick cvcvcv` Available only in your own room if you are a streamer. Forcefully disconnect the user.</br>
+<code><a>/nick kawen (password)</a></code> Password is only required if kawen is a registered user.</br>
+<code><a>/join kawen</a></code> Join the chatroom for kawen's stream and leave the previous room.</br>
+<code><a>/kick cvcvcv</a></code> Available only in your own room if you are a streamer. Forcefully disconnect the user.</br>
+<code><a>/ban cvcvcv (time)</a></code> Ban a user from your room. Bans are based on IP address. The optional time is in minutes. The default is 30.</br>
+<code><a>/banlist</a></code> List the IPs currently banned from your room.</br>
+<code><a>/unban (ip)</a></code> self explanatory</br>
 
 <h4>Streaming</h4>
 Users should stream to <a>rtmp://{{ domain }}/stream/Stream-Key</a></br></br>
