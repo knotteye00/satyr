@@ -8,7 +8,7 @@ import * as dirty from "dirty";
 import * as socketSpam from "socket-anti-spam";
 import * as api from "./api";
 import * as db from "./database";
-import * as irc from "./irc";
+import { config } from "./config";
 import { readdir, readFileSync, writeFileSync } from "fs";
 import { JWT, JWK } from "jose";
 import { strict } from "assert";
@@ -20,10 +20,10 @@ const server = http.createServer(app);
 const io = socketio(server);
 const store = dirty();
 var banlist;
-var ircconf;
 var jwkey;
 try{
 	jwkey = JWK.asKey(readFileSync('./config/jwt.pem'));
+	console.log('Found key for JWT signing.');
 } catch (e) {
 	console.log("No key found for JWT signing, generating one now.");
 	jwkey = JWK.generateSync('RSA', 2048, { use: 'sig' });
@@ -31,24 +31,23 @@ try{
 }
 var njkconf;
 
-async function init(satyr: any, http: object, irc: any){
-	ircconf = irc;
+async function init(){
 	njk.configure('templates', {
 		autoescape	: true,
 		express   	: app,
 		watch		: false
 	});
-	njkconf ={
-		sitename: satyr.name,
-		domain: satyr.domain,
-		email: satyr.email,
-		rootredirect: satyr.rootredirect,
-		version: satyr.version
+	njkconf = {
+		sitename: config['satyr']['name'],
+		domain: config['satyr']['domain'],
+		email: config['satyr']['email'],
+		rootredirect: config['satyr']['rootredirect'],
+		version: config['satyr']['version']
 	};
 	app.use(cookies());
 	app.use(bodyparser.json());
 	app.use(bodyparser.urlencoded({ extended: true }));
-	if(http['hsts']){
+	if(config['http']['hsts']){
 		app.use((req, res, next) => {
 			res.append('Strict-Transport-Security', 'max-age=5184000');
 			next();
@@ -56,11 +55,11 @@ async function init(satyr: any, http: object, irc: any){
 	}
 	app.disable('x-powered-by');
 	//site handlers
-	await initSite(satyr.registration);
+	await initSite(config['satyr']['registration']);
 	//api handlers
 	await initAPI();
 	//static files if nothing else matches first
-	app.use(express.static(satyr.directory));
+	app.use(express.static(config['http']['directory']));
 	//404 Handler
 	app.use(function (req, res, next) {
 		if(tryDecode(req.cookies.Authorization)) {
@@ -70,7 +69,7 @@ async function init(satyr: any, http: object, irc: any){
 		//res.status(404).render('404.njk', njkconf);
 	});
 	banlist = new dirty('./config/bans.db').on('load', () => {initChat()});
-	server.listen(http['port']);
+	server.listen(config['http']['port']);
 }
 
 async function newNick(socket, skip?: boolean, i?: number) {
@@ -336,23 +335,17 @@ async function initSite(openReg) {
 }
 
 async function initChat() {
-	//irc peering
-	if(ircconf.enable){
-		await irc.connect({
-			port: ircconf.port,
-			sid: ircconf.sid,
-			pass: ircconf.pass,
-			server: ircconf.server,
-			vhost: ircconf.vhost
-		});
-		irc.events.on('message', (nick, channel, msg) => {
-			io.to(channel).emit('MSG', {nick: nick, msg: msg});
-		});
-	}
+	//set a cookie to request same nick
+	//apply same nick if the request comes from the same ip
+	//structure of entry in store should be:
+	// knotteye: {
+	//	ip: "127.0.0.1",
+	//	id: ["aklsjdnaksj", "asjdnaksjnd", "aksjdnkajs"]
+	//}
+	
 	//socket.io chat logic
 	io.on('connection', async (socket) => {
 		socket.nick = await newNick(socket);
-		if(ircconf.enable) irc.registerUser(socket.nick);
 		socket.on('JOINROOM', async (data) => {
 			let t: any = await db.query('select username from users where username='+db.raw.escape(data));
 			if(t[0]){
@@ -367,7 +360,6 @@ async function initChat() {
 				}
 				socket.join(data);
 				io.to(data).emit('JOINED', {nick: socket.nick});
-				if(ircconf.enable) irc.join(socket.nick, data);
 			}
 			else socket.emit('ALERT', 'Room does not exist');
 		});
@@ -388,16 +380,13 @@ async function initChat() {
 		});
 		socket.on('LEAVEROOM', (data) => {
 			socket.leave(data);
-			if(ircconf.enable) irc.part(socket.nick, data);
 			io.to(data).emit('LEFT', {nick: socket.nick});
 		});
 		socket.on('disconnecting', (reason) => {
 			let rooms = Object.keys(socket.rooms);
 			for(let i=1;i<rooms.length;i++){
-				if(ircconf.enable) irc.part(socket.nick, rooms[i]);
 				io.to(rooms[i]).emit('ALERT', socket.nick+' disconnected');
 			}
-			if(ircconf.enable) irc.unregisterUser(socket.nick);
 			store.rm(socket.nick);
 		});
 		socket.on('NICK', async (data) => {
@@ -424,7 +413,6 @@ async function initChat() {
 		socket.on('MSG', (data) => {
 			if(data.msg === "" || !data.msg.replace(/\s/g, '').length) return;
 			io.to(data.room).emit('MSG', {nick: socket.nick, msg: data.msg});
-			if(ircconf.enable) irc.send(socket.nick, data.room, data.msg);
 		});
 		socket.on('KICK', (data) => {
 			if(socket.nick === data.room){
@@ -491,10 +479,8 @@ async function initChat() {
 	socketAS.event.on('ban', (socket) => {
 		let rooms = Object.keys(socket.rooms);
 		for(let i=1;i<rooms.length;i++){
-			if(ircconf.enable) irc.part(socket.nick, rooms[i]);
 			io.to(rooms[i]).emit('ALERT', socket.nick+' was banned.');
 		}
-		if(ircconf.enable) irc.unregisterUser(socket.nick);
 		store.rm(socket.nick);
 	});
 }

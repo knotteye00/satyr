@@ -1,8 +1,6 @@
 node_modules
 site/live
-config/local.toml
-config/jwt.pem
-config/generated.toml
-config/bans.db
+config/**/*
+!config/.gitkeep
 install/db_setup.sql
 build/**

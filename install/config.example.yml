@@ -1,0 +1,24 @@
+satyr:
+  name: '<iname>'
+  domain: '<domain>'
+  email: '<email>'
+  registration: false
+
+media:
+  record: false
+  ffmpeg: '<ffmpeg>'
+
+http:
+  # uncomment to set HSTS when SSL is ready
+  #hsts: true
+
+database:
+  user: '<dbuser>'
+  password: '<dbpass>'
+  database: '<dbname>'
+  host: '<dbhost>'
+
+transcode:
+  adaptive: false
+  format: dash
+  variants: 3
