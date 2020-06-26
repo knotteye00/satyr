@@ -39,7 +39,7 @@ async function genKey(){
 	else return key;
 }
 
-async function query(query: string){
+async function query(query: string): Promise<Array<any>>{
 	return new Promise(resolve => raw.query(query, (error, results, fields) => {
 		if(error) throw error;
 		resolve(results);
