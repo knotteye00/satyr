@@ -317,7 +317,19 @@ async function initSite(openReg) {
 	});
 	app.get('/profile', (req, res) => {
 		if(tryDecode(req.cookies.Authorization)) {
-			res.render('profile.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+			db.query('select * from user_meta where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((result) => {
+				res.render('profile.njk', Object.assign({meta: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+			});
+			//res.render('profile.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+		}
+		else res.redirect('/login');
+	});
+	app.get('/profile/chat', (req, res) => {
+		if(tryDecode(req.cookies.Authorization)) {
+			db.query('select * from chat_integration where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((result) => {
+				res.render('chat_integ.njk', Object.assign({integ: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+			});
+			//res.render('chat_integ.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
 		}
 		else res.redirect('/login');
 	});
