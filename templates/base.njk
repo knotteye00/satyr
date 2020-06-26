@@ -4,6 +4,15 @@
 	<link rel="stylesheet" type="text/css" href="/local.css">
 	<link rel="icon" type="image/svg" href="/logo.svg">
 	<title>{{ sitename }}</title>
+	<script>
+		//should check for and refresh login tokens on pageload..
+		if(document.cookie.match(/^(.*;)?\s*Authorization\s*=\s*[^;]+(.*)?$/) !== null) {
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", "/api/login", true);
+			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			xhr.send("");
+		}
+	</script>
 	{% block head %}
 	{% endblock %}
 </head>
