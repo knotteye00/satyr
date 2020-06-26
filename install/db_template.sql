@@ -14,3 +14,10 @@ CREATE TABLE user_meta(
 	about VARCHAR(5000),
 	live TINYINT
 );
+CREATE TABLE chat_integration(
+	username VARCHAR(25),
+	irc VARCHAR(1000),
+	xmpp VARCHAR(1000),
+	twitch VARCHAR(1000),
+	discord VARCHAR(1000)
+);

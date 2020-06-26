@@ -357,7 +357,7 @@ async function initChat() {
 					}
 				}
 				socket.join(data);
-				io.to(data).emit('JOINED', {nick: socket.nick});
+				io.to(data).emit('JOINED', {nick: socket.nick, room: data});
 			}
 			else socket.emit('ALERT', 'Room does not exist');
 		});
@@ -377,8 +377,8 @@ async function initChat() {
 			});
 		});
 		socket.on('LEAVEROOM', (data) => {
+			io.to(data).emit('LEFT', {nick: socket.nick, room: data});
 			socket.leave(data);
-			io.to(data).emit('LEFT', {nick: socket.nick});
 		});
 		socket.on('disconnecting', (reason) => {
 			let rooms = Object.keys(socket.rooms);
@@ -413,9 +413,9 @@ async function initChat() {
 				chgNick(socket, data.nick);
 			}
 		});
-		socket.on('MSG', (data) => {
-			if(data.msg === "" || !data.msg.replace(/\s/g, '').length) return;
-			if(socket.rooms[data['room']]) io.to(data.room).emit('MSG', {nick: socket.nick, msg: data.msg});
+		socket.on('MSG', (data: object) => {
+			if(data['msg'] === "" || !data['msg'].replace(/\s/g, '').length) return;
+			if(socket.rooms[data['room']]) io.to(data['room']).emit('MSG', {nick: socket.nick, msg: data['msg'], room: data['room']});
 		});
 		socket.on('KICK', (data) => {
 			if(socket.nick === data.room){

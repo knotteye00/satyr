@@ -8,6 +8,9 @@ media:
   record: false
   ffmpeg: '<ffmpeg>'
 
+rtmp:
+  port: 1935
+
 http:
   # uncomment to set HSTS when SSL is ready
   #hsts: true
@@ -22,3 +25,31 @@ transcode:
   adaptive: false
   format: dash
   variants: 3
+
+chat:
+
+  irc:
+    enabled: false
+    server:
+    port: 6667
+    tls: false
+    nickname: 'SatyrChat'
+    username: 'SatyrChat'
+    sasl: false
+    password:
+
+  discord:
+    enabled: false
+    token:
+
+  xmpp:
+    enabled: false
+    server:
+    port: 5222
+    nickname: 'SatyrChat'
+    username: 'SatyrChat'
+
+  twitch:
+    enabled: false
+    username:
+    token:
