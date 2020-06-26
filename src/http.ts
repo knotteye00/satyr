@@ -181,6 +181,28 @@ async function initAPI() {
 			res.send(result);
 		});*/
 	});
+	app.post('/api/user/update/chat', (req, res) => {
+		validToken(req.cookies.Authorization).then((t) => {
+			if(t) {
+				return api.updateChat({name: t['username'],
+					discord: "discord" in req.body ? req.body.discord : false,
+					xmpp: "xmpp" in req.body ? req.body.xmpp : false,
+					twitch: "twitch" in req.body ? req.body.twitch : false,
+					irc: "irc" in req.body ? req.body.irc : false,
+				}).then((r) => {
+					res.send(r);
+					return;
+				});
+			}
+			else {
+				res.send('{"error":"invalid token"}');
+				return;
+			}
+		});
+		/*api.update(req.body.username, req.body.password, req.body.title, req.body.bio, req.body.record).then((result) => {
+			res.send(result);
+		});*/
+	});
 	app.post('/api/user/password', (req, res) => {
 		validToken(req.cookies.Authorization).then((t) => {
 			if(t) {

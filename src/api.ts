@@ -33,6 +33,10 @@ async function update(fields: object){
 	await db.query('UPDATE users,user_meta SET'+qs+' WHERE users.username='+db.raw.escape(fields['name'])+' AND user_meta.username='+db.raw.escape(fields['name']));
 	return {"success":""};
 }
+async function updateChat(fields: object){
+	await db.query('UPDATE chat_integration SET xmpp='+db.raw.escape(fields['xmpp'])+', discord='+db.raw.escape(fields['discord'])+', irc='+db.raw.escape(fields['irc'])+', twitch='+db.raw.escape(fields['twitch'])+' WHERE username='+db.raw.escape(fields['name']));
+	return {"success":""};
+}
 
 async function changepwd(name: string, password: string, newpwd: string){
 	if(!name || !password || !newpwd) return {"error":"Insufficient parameters"};
@@ -56,4 +60,4 @@ async function login(name: string, password: string){
 	return false;
 }
 
-export { register, update, changepwd, changesk, login };
+export { register, update, changepwd, changesk, login, updateChat };
