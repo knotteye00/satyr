@@ -35,6 +35,7 @@ chat:
     tls: false
     nickname: 'SatyrChat'
     username: 'SatyrChat'
+    realname: 'Satyr Chat Integration Bot'
     sasl: false
     password:
 
