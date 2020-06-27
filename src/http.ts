@@ -8,6 +8,7 @@ import * as dirty from "dirty";
 import * as socketSpam from "socket-anti-spam";
 import * as api from "./api";
 import * as db from "./database";
+import * as chatInteg from "./chat";
 import { config } from "./config";
 import { readdir, readFileSync, writeFileSync } from "fs";
 import { JWT, JWK } from "jose";
@@ -450,6 +451,7 @@ async function initChat() {
 		socket.on('MSG', (data: object) => {
 			if(data['msg'] === "" || !data['msg'].replace(/\s/g, '').length) return;
 			if(socket.rooms[data['room']]) io.to(data['room']).emit('MSG', {nick: socket.nick, msg: data['msg'], room: data['room']});
+			chatInteg.sendAll(data['room'], [socket.nick, data['msg']], "web");
 		});
 		socket.on('KICK', (data) => {
 			if(socket.nick === data.room){
@@ -539,4 +541,4 @@ async function initChat() {
 	});
 }
 
-export { init };
+export { init, io };
