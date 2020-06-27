@@ -42,9 +42,6 @@ chat:
   discord:
     enabled: false
     token:
-    #server name is optional, will relay from messages from all matching channels in all servers
-    #if not specified
-    server:
 
   xmpp:
     enabled: false
@@ -56,4 +53,5 @@ chat:
   twitch:
     enabled: false
     username:
-    token:
+    #https://twitchapps.com/tmi/
+    password:

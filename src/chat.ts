@@ -3,6 +3,7 @@ import {config} from "./config";
 import {io} from "./http";
 import * as irc from "irc";
 import * as discord from "discord.js";
+import * as twitch from "dank-twitch-irc";
 
 var ircClient;
 var xmppClient;
@@ -52,7 +53,26 @@ async function init() {
 		
 	}
 	if(config['chat']['twitch']['enabled']){
-		
+		twitchClient = new twitch.ChatClient({
+			username: config['chat']['twitch']['username'],
+			password: config['chat']['twitch']['password'],
+		});
+		twitchClient.on('ready', () => {
+			console.log("Twitch Client Ready");
+		});
+		twitchClient.on("error", (error) => {
+			if (error != null) {
+				console.error("Twitch Client Error: ", error);
+			}
+		});
+		twitchClient.on("PRIVMSG", (msg) => {
+			if(msg['senderUserID'] === twitchClient['userStateTracker']['globalState']['userID']) return;
+			var lu = getUsr(msg['channelName'], 'twitch');
+			for(var i=0;i<lu.length;i++){
+				sendAll(lu[i], [msg['displayName'], msg['messageText']], "twitch");
+			}
+		});
+		twitchClient.connect();
 	}
 }
 
@@ -68,8 +88,8 @@ async function updateInteg() {
 	}
 	if(liveUsers.length === 1) {
 		chatIntegration = await db.query('SELECT * FROM chat_integration WHERE username='+db.raw.escape(liveUsers[0]['username']));
-		console.log('updated ci');
 		updateIRCChan();
+		updateTwitchChan();
 		return;
 	}
 	var qs: string;
@@ -77,11 +97,9 @@ async function updateInteg() {
 		qs += db.raw.escape(u['username']) + " OR username=";
 	}
 	qs = qs.substring(0, qs.length - 13);
-	console.log('SELECT * FROM chat_integration WHERE username='+qs);
 	chatIntegration = await db.query('SELECT * FROM chat_integration WHERE username='+qs);
-	console.log('updated integrations');
-	console.log(chatIntegration);
 	updateIRCChan();
+	updateTwitchChan();
 }
 
 async function sendAll(user: string, msg: Array<string>, src: string) {
@@ -94,7 +112,7 @@ async function sendAll(user: string, msg: Array<string>, src: string) {
 	if(user === null) return;
 
 	if(src !== "irc") sendIRC(getCh(user, "irc"), '['+src.toUpperCase()+']'+msg[0]+': '+msg[1]);
-	//if(src !== "twitch") sendTwitch();
+	if(src !== "twitch") sendTwitch(getCh(user, "twitch"), '['+src.toUpperCase()+']'+msg[0]+': '+msg[1]);
 	if(src !== "discord") sendDiscord(getCh(user, "discord"), '['+src.toUpperCase()+']'+msg[0]+': '+msg[1]);
 	//if(src !== "xmpp") sendXMPP();
 	if(src !== "web") sendWeb(user, ['['+src.toUpperCase()+']'+msg[0], msg[1]]);
@@ -121,6 +139,7 @@ async function sendXMPP(channel: string, msg: string) {
 async function sendTwitch(channel: string, msg: string) {
 	if(!config['chat']['twitch']['enabled']) return;
 	if(channel === null) return;
+	twitchClient.say(channel, msg);
 }
 
 async function sendWeb(channel: string, msg: Array<string>) {
@@ -152,6 +171,16 @@ async function updateIRCChan() {
 	}
 	for(var i=0;i<clist.length;i++){
 		ircClient.join(clist[i]);
+	}
+}
+
+async function updateTwitchChan() {
+	var clist: Array<string> = [];
+	for(var i=0;i<chatIntegration.length;i++){
+		if(chatIntegration[i]['twitch'].trim() !== "" && chatIntegration[i]['twitch'] !== null) clist.push(chatIntegration[i]['twitch']);
+	}
+	for(var i=0;i<clist.length;i++){
+		twitchClient.join(clist[i]);
 	}
 }
 
