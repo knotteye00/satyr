@@ -5,7 +5,7 @@
 	<form action="/api/user/update" method="POST" target="responseFrame">
 		Stream Title: </br><input type="text" name="title" style="min-width: 300px" value="{{meta.title}}"/></br>
 		Bio: </br><input type="text" name="bio" style="min-width: 300px; min-height: 150px;" value="{{meta.about}}"/></br>
-		Record VODs: <input type="radio" name="record" value="true"> Yes<input type="radio" name="record" value="false" /> No</br></br>
+		Record VODs: <input type="radio" name="record" value="true" {% if rflag.record_flag %}checked{% endif %}> Yes<input type="radio" name="record" value="false" {% if rflag.record_flag %}{% else %}checked{% endif %}/> No</br></br>
 		<input type="submit" value="Update Profile">
 	</form></br>
 	<form action="/api/user/streamkey" method="POST" target="responseFrame">

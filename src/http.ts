@@ -164,6 +164,8 @@ async function initAPI() {
 	app.post('/api/user/update', (req, res) => {
 		validToken(req.cookies.Authorization).then((t) => {
 			if(t) {
+				if(req.body.record === "true") req.body.record = true;
+				else if(req.body.record === "false") req.body.record = false;
 				return api.update({name: t['username'],
 					title: "title" in req.body ? req.body.title : false,
 					bio: "bio" in req.body ? req.body.bio : false,
@@ -377,7 +379,9 @@ async function initSite(openReg) {
 	app.get('/profile', (req, res) => {
 		if(tryDecode(req.cookies.Authorization)) {
 			db.query('select * from user_meta where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((result) => {
-				res.render('profile.njk', Object.assign({meta: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+				db.query('select record_flag from users where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((r2) => {
+					res.render('profile.njk', Object.assign({rflag: r2[0]}, {meta: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+				});
 			});
 			//res.render('profile.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
 		}
