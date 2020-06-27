@@ -204,6 +204,25 @@ async function initAPI() {
 			res.send(result);
 		});*/
 	});
+	app.post('/api/user/vods/delete', (req, res) => {
+		if(req.body.vlist === undefined || req.body.vlist === null || req.body.vlist === []){
+			res.send('{"error":"no vods specified"}');
+			return;
+		}
+		validToken(req.cookies.Authorization).then((t) => {
+			if(t) {
+				//token is valid, process deletion request
+				return api.deleteVODs(req.body.vlist, t['username']).then((r)=> {
+					res.send(r)
+					return;
+				});
+			}
+			else {
+				res.send('{"error":"invalid token"}');
+				return;
+			}
+		});
+	});
 	app.post('/api/user/password', (req, res) => {
 		validToken(req.cookies.Authorization).then((t) => {
 			if(t) {
@@ -302,6 +321,23 @@ async function initSite(openReg) {
 				}
 				else res.render('user.njk', Object.assign(result[0], njkconf));
 				//res.render('user.njk', Object.assign(result[0], njkconf));
+			}
+			else if(tryDecode(req.cookies.Authorization)) {
+				res.status(404).render('404.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+			}
+			else res.status(404).render('404.njk', njkconf);
+		});
+	});
+	app.get('/vods/:user/manage', (req, res) => {
+		db.query('select username from user_meta where username='+db.raw.escape(req.params.user)).then((result) => {
+			if(result[0]){
+				readdir('./site/live/'+result[0].username, {withFileTypes: true} , (err, files) => {
+					if(tryDecode(req.cookies.Authorization)) {
+						res.render('managevods.njk', Object.assign({user: result[0].username, list: files.filter(fn => fn.name.endsWith('.mp4'))}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+					}
+					else res.redirect('/login');
+					//res.render('vods.njk', Object.assign({user: result[0].username, list: files.filter(fn => fn.name.endsWith('.mp4'))}, njkconf));
+				});
 			}
 			else if(tryDecode(req.cookies.Authorization)) {
 				res.status(404).render('404.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));

@@ -1,7 +1,8 @@
 import * as db from "./database"
 import { config } from "./config";
+import {unlink} from "fs";
 
-async function register(name: string, password: string, confirm: string) {
+async function register(name: string, password: string, confirm: string): Promise<object> {
 	if(!config['satyr']['registration']) return {"error":"registration disabled"};
 	if(name.includes(';') || name.includes(' ') || name.includes('\'')) return {"error":"illegal characters"};
 	if(password !== confirm) return {"error":"mismatched passwords"};
@@ -16,7 +17,7 @@ async function register(name: string, password: string, confirm: string) {
 	return {"error":""};
 }
 
-async function update(fields: object){
+async function update(fields: object): Promise<object>{
 	if(!fields['title'] && !fields['bio'] && (fields['rec'] !== 'true' && fields['rec'] !== 'false')) return {"error":"no valid fields specified"};
 	let qs: string = "";
 	let f: boolean = false;
@@ -33,12 +34,13 @@ async function update(fields: object){
 	await db.query('UPDATE users,user_meta SET'+qs+' WHERE users.username='+db.raw.escape(fields['name'])+' AND user_meta.username='+db.raw.escape(fields['name']));
 	return {"success":""};
 }
-async function updateChat(fields: object){
+
+async function updateChat(fields: object): Promise<object>{
 	await db.query('UPDATE chat_integration SET xmpp='+db.raw.escape(fields['xmpp'])+', discord='+db.raw.escape(fields['discord'])+', irc='+db.raw.escape(fields['irc'])+', twitch='+db.raw.escape(fields['twitch'])+' WHERE username='+db.raw.escape(fields['name']));
 	return {"success":""};
 }
 
-async function changepwd(name: string, password: string, newpwd: string){
+async function changepwd(name: string, password: string, newpwd: string): Promise<object>{
 	if(!name || !password || !newpwd) return {"error":"Insufficient parameters"};
 	let auth: boolean = await db.validatePassword(name, password);
 	if(!auth) return {"error":"Username or Password Incorrect"};
@@ -47,7 +49,7 @@ async function changepwd(name: string, password: string, newpwd: string){
 	return {"success":""};
 }
 
-async function changesk(name: string){
+async function changesk(name: string): Promise<object>{
 	let key: string = await db.genKey();
 	await db.query('UPDATE users set stream_key='+db.raw.escape(key)+'where username='+db.raw.escape(name)+' limit 1');
 	return {"success":key};
@@ -60,4 +62,11 @@ async function login(name: string, password: string){
 	return false;
 }
 
-export { register, update, changepwd, changesk, login, updateChat };
+async function deleteVODs(vodlist: Array<string>, username: string): Promise<object>{
+	for(var i=0;i<vodlist.length;i++){
+		unlink('./site/live/'+username+'/'+vodlist[i], ()=>{});
+	}
+	return {"success":""};
+}
+
+export { register, update, changepwd, changesk, login, updateChat, deleteVODs };

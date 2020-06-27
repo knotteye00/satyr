@@ -1,6 +1,7 @@
 {% extends "base.njk" %}
 {% block content %}
 	<h3>{{ user }}'s VODs</h3>
+	{% if auth.name == user %}<span style="font-size: small;"><a href="/vods/{{user}}/manage">Manage</a> your vods.</br></span><p></p>{% endif %}
 	{% asyncEach vid in list%}
 		<a href="/live/{{ user }}/{{ vid.name }}">{{ vid.name }}</a></br></br>
 	{% else %}
