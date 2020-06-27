@@ -133,10 +133,10 @@ async function transCommand(user: string, key: string): Promise<string[]>{
 	else {
 		args = args.concat(['-c:a', 'copy', '-c:v', 'copy']);
 	}
-	if(config['transcode']['format'] === 'dash')
+	//if(config['transcode']['format'] === 'dash')
 	args = args.concat(['-remove_at_exit', '1', '-seg_duration', '1', '-window_size', '30', '-f', 'dash', config['http']['directory']+'/'+config['media']['publicEndpoint']+'/'+user+'/index.mpd']);
-	else if(config['transcode']['format'] === 'hls')
-	args = args.concat(['-remove_at_exit', '1', '-hls_time', '1', '-hls_list_size', '30', '-f', 'hls', config['http']['directory']+'/'+config['media']['publicEndpoint']+'/'+user+'/index.m3u8']);
+	//else if(config['transcode']['format'] === 'hls')
+	//args = args.concat(['-remove_at_exit', '1', '-hls_time', '1', '-hls_list_size', '30', '-f', 'hls', config['http']['directory']+'/'+config['media']['publicEndpoint']+'/'+user+'/index.m3u8']);
 	return args;
 }
 export { init };

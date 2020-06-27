@@ -16,7 +16,7 @@
 	{% block head %}
 	{% endblock %}
 </head>
-<body>
+<body onload="startVideo()">
 	<div id="wrapper">
 		<div id="header">
 			<span style="float:left;"><h4><a href="/">{{ sitename }}</a> | <a href="/users">Users</a> <a href="/users/live">Live</a> <a href="/about">About</a></h4></span><span style="float:right;"><h4><a href="/help">Help</a> | {% if auth.is %}<a href="/profile">{{ auth.name }}{% else %}<a href="/login">Log In{% endif %}</a></h4></span>

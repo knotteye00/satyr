@@ -22,9 +22,11 @@ database:
   host: '<dbhost>'
 
 transcode:
+  #may result in higher latency if your cpu can't keep up
   adaptive: false
-  format: dash
   variants: 3
+  #unused right now, will always transcode to dash
+  format: dash
 
 chat:
 
