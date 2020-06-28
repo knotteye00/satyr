@@ -9,7 +9,7 @@ Restart=on-failure
 User=satyr
 Environment="HOME=/var/lib/satyr"
 WorkingDirectory=/opt/satyr
-ExecStart=/usr/bin/npm start
+ExecStart=/usr/bin/npm run start
 
 PrivateTmp=true
 ProtectHome=true

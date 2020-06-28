@@ -8,6 +8,7 @@ import * as dirty from "dirty";
 import * as socketSpam from "socket-anti-spam";
 import * as api from "./api";
 import * as db from "./database";
+import * as chatInteg from "./chat";
 import { config } from "./config";
 import { readdir, readFileSync, writeFileSync } from "fs";
 import { JWT, JWK } from "jose";
@@ -163,6 +164,8 @@ async function initAPI() {
 	app.post('/api/user/update', (req, res) => {
 		validToken(req.cookies.Authorization).then((t) => {
 			if(t) {
+				if(req.body.record === "true") req.body.record = true;
+				else if(req.body.record === "false") req.body.record = false;
 				return api.update({name: t['username'],
 					title: "title" in req.body ? req.body.title : false,
 					bio: "bio" in req.body ? req.body.bio : false,
@@ -180,6 +183,47 @@ async function initAPI() {
 		/*api.update(req.body.username, req.body.password, req.body.title, req.body.bio, req.body.record).then((result) => {
 			res.send(result);
 		});*/
+	});
+	app.post('/api/user/update/chat', (req, res) => {
+		validToken(req.cookies.Authorization).then((t) => {
+			if(t) {
+				return api.updateChat({name: t['username'],
+					discord: "discord" in req.body ? req.body.discord : false,
+					xmpp: "xmpp" in req.body ? req.body.xmpp : false,
+					twitch: "twitch" in req.body ? req.body.twitch : false,
+					irc: "irc" in req.body ? req.body.irc : false,
+				}).then((r) => {
+					res.send(r);
+					return;
+				});
+			}
+			else {
+				res.send('{"error":"invalid token"}');
+				return;
+			}
+		});
+		/*api.update(req.body.username, req.body.password, req.body.title, req.body.bio, req.body.record).then((result) => {
+			res.send(result);
+		});*/
+	});
+	app.post('/api/user/vods/delete', (req, res) => {
+		if(req.body.vlist === undefined || req.body.vlist === null || req.body.vlist === []){
+			res.send('{"error":"no vods specified"}');
+			return;
+		}
+		validToken(req.cookies.Authorization).then((t) => {
+			if(t) {
+				//token is valid, process deletion request
+				return api.deleteVODs(req.body.vlist, t['username']).then((r)=> {
+					res.send(r)
+					return;
+				});
+			}
+			else {
+				res.send('{"error":"invalid token"}');
+				return;
+			}
+		});
 	});
 	app.post('/api/user/password', (req, res) => {
 		validToken(req.cookies.Authorization).then((t) => {
@@ -286,6 +330,23 @@ async function initSite(openReg) {
 			else res.status(404).render('404.njk', njkconf);
 		});
 	});
+	app.get('/vods/:user/manage', (req, res) => {
+		db.query('select username from user_meta where username='+db.raw.escape(req.params.user)).then((result) => {
+			if(result[0]){
+				readdir('./site/live/'+result[0].username, {withFileTypes: true} , (err, files) => {
+					if(tryDecode(req.cookies.Authorization)) {
+						res.render('managevods.njk', Object.assign({user: result[0].username, list: files.filter(fn => fn.name.endsWith('.mp4'))}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+					}
+					else res.redirect('/login');
+					//res.render('vods.njk', Object.assign({user: result[0].username, list: files.filter(fn => fn.name.endsWith('.mp4'))}, njkconf));
+				});
+			}
+			else if(tryDecode(req.cookies.Authorization)) {
+				res.status(404).render('404.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+			}
+			else res.status(404).render('404.njk', njkconf);
+		});
+	});
 	app.get('/vods/:user', (req, res) => {
 		db.query('select username from user_meta where username='+db.raw.escape(req.params.user)).then((result) => {
 			if(result[0]){
@@ -317,7 +378,21 @@ async function initSite(openReg) {
 	});
 	app.get('/profile', (req, res) => {
 		if(tryDecode(req.cookies.Authorization)) {
-			res.render('profile.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+			db.query('select * from user_meta where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((result) => {
+				db.query('select record_flag from users where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((r2) => {
+					res.render('profile.njk', Object.assign({rflag: r2[0]}, {meta: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+				});
+			});
+			//res.render('profile.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+		}
+		else res.redirect('/login');
+	});
+	app.get('/profile/chat', (req, res) => {
+		if(tryDecode(req.cookies.Authorization)) {
+			db.query('select * from chat_integration where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((result) => {
+				res.render('chat_integ.njk', Object.assign({integ: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+			});
+			//res.render('chat_integ.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
 		}
 		else res.redirect('/login');
 	});
@@ -357,7 +432,7 @@ async function initChat() {
 					}
 				}
 				socket.join(data);
-				io.to(data).emit('JOINED', {nick: socket.nick});
+				io.to(data).emit('JOINED', {nick: socket.nick, room: data});
 			}
 			else socket.emit('ALERT', 'Room does not exist');
 		});
@@ -377,8 +452,8 @@ async function initChat() {
 			});
 		});
 		socket.on('LEAVEROOM', (data) => {
+			io.to(data).emit('LEFT', {nick: socket.nick, room: data});
 			socket.leave(data);
-			io.to(data).emit('LEFT', {nick: socket.nick});
 		});
 		socket.on('disconnecting', (reason) => {
 			let rooms = Object.keys(socket.rooms);
@@ -413,9 +488,10 @@ async function initChat() {
 				chgNick(socket, data.nick);
 			}
 		});
-		socket.on('MSG', (data) => {
-			if(data.msg === "" || !data.msg.replace(/\s/g, '').length) return;
-			if(socket.rooms[data['room']]) io.to(data.room).emit('MSG', {nick: socket.nick, msg: data.msg});
+		socket.on('MSG', (data: object) => {
+			if(data['msg'] === "" || !data['msg'].replace(/\s/g, '').length) return;
+			if(socket.rooms[data['room']]) io.to(data['room']).emit('MSG', {nick: socket.nick, msg: data['msg'], room: data['room']});
+			chatInteg.sendAll(data['room'], [socket.nick, data['msg']], "web");
 		});
 		socket.on('KICK', (data) => {
 			if(socket.nick === data.room){
@@ -505,4 +581,4 @@ async function initChat() {
 	});
 }
 
-export { init };
+export { init, io };

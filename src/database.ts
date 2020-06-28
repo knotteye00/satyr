@@ -20,6 +20,7 @@ async function addUser(name: string, password: string){
 	if(dupe[0]) return false;
 	await query('INSERT INTO users (username, password_hash, stream_key, record_flag) VALUES ('+raw.escape(name)+', '+raw.escape(hash)+', '+raw.escape(key)+', 0)');
 	await query('INSERT INTO user_meta (username, title, about, live) VALUES ('+raw.escape(name)+',\'\',\'\',false)');
+	await query('INSERT INTO chat_integration (username, irc, xmpp, twitch, discord) VALUES ('+raw.escape(name)+',\'\',\'\',\'\',\'\')');
 	return true;
 }
 
@@ -38,7 +39,7 @@ async function genKey(){
 	else return key;
 }
 
-async function query(query: string){
+async function query(query: string): Promise<Array<any>>{
 	return new Promise(resolve => raw.query(query, (error, results, fields) => {
 		if(error) throw error;
 		resolve(results);

@@ -4,10 +4,19 @@
 	<link rel="stylesheet" type="text/css" href="/local.css">
 	<link rel="icon" type="image/svg" href="/logo.svg">
 	<title>{{ sitename }}</title>
+	<script>
+		//should check for and refresh login tokens on pageload..
+		if(document.cookie.match(/^(.*;)?\s*Authorization\s*=\s*[^;]+(.*)?$/) !== null) {
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", "/api/login", true);
+			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			xhr.send("");
+		}
+	</script>
 	{% block head %}
 	{% endblock %}
 </head>
-<body>
+<body onload="startVideo()">
 	<div id="wrapper">
 		<div id="header">
 			<span style="float:left;"><h4><a href="/">{{ sitename }}</a> | <a href="/users">Users</a> <a href="/users/live">Live</a> <a href="/about">About</a></h4></span><span style="float:right;"><h4><a href="/help">Help</a> | {% if auth.is %}<a href="/profile">{{ auth.name }}{% else %}<a href="/login">Log In{% endif %}</a></h4></span>

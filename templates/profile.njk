@@ -1,11 +1,11 @@
 {% extends "base.njk" %}
 {% block content %}
-<h3>Update your profile on {{ sitename }}</h3><span style="font-size: small;">Or, change your <a href="/changepwd">password</a>.</span>
+<h3>Update your profile on {{ sitename }}</h3><span style="font-size: small;">Integrate your chat with other <a href="/profile/chat">platforms</a>.</br></span><span style="font-size: small;">Or, change your <a href="/changepwd">password</a>.</span>
 <p></p>
-	<form action="/api/user/update" method="POST" target="responseFrame">
-		Stream Title: </br><input type="text" name="title" style="min-width: 300px"/></br>
-		Bio: </br><input type="text" name="bio" style="min-width: 300px; min-height: 150px;"/></br>
-		Record VODs: <input type="radio" name="record" value="true"> Yes<input type="radio" name="record" value="false" /> No</br></br>
+	<form action="/api/user/update" method="POST" target="responseFrame" id="profile">
+		Stream Title: </br><textarea form="profile" name="title" style="min-width: 320px;resize: none;font-size: large;text-align: center;" value="{{meta.title}}">{{meta.title}}</textarea></br>
+		Bio: </br><textarea form="profile" name="bio" style="min-width: 320px; min-height: 150px;resize: none;font-size: inherit;" value="{{meta.about}}">{{meta.about}}</textarea></br>
+		Record VODs: <input type="radio" name="record" value="true" {% if rflag.record_flag %}checked{% endif %}> Yes<input type="radio" name="record" value="false" {% if rflag.record_flag %}{% else %}checked{% endif %}/> No</br></br>
 		<input type="submit" value="Update Profile">
 	</form></br>
 	<form action="/api/user/streamkey" method="POST" target="responseFrame">
