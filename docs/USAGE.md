@@ -2,13 +2,6 @@
 
 ### Administration
 Satyr needs access to port 1935 for RTMP streams, and will serve HTTP on port 8000. The ports can be changed with follow config lines.
-```
-[server.http]
-port = 8000
-[server.rtmp]
-port = 1935
-```
-Changing the rtmp port is not recommended.
 
 For HTTPS, run a reverse proxy in front of satyr. An example nginx block is shown below.
 ```
@@ -33,12 +26,6 @@ server {
 }
 ```
 
-Users can be added from the command line even if registration is closed. Use the following syntax.
-```bash
-npm run-script user -- --adduser kawen --password imkawen
-npm run-script user -- --rmuser lain
-```
-
 ### Users
 
 #### Accounts
@@ -49,15 +36,18 @@ Stream keys can be changed at example.tld/changesk, and passwords at /changepwd
 Chat is based on Socket.IO, and can be accessed through the webclient at /chat.
 Chatting and changing a nickname do not require authentication, but the usernames of streamers are reserved.
 The following commands are available:
-`/nick kawen (password)` Password is only required if kawen is a registered user.
-`/join kawen` Join the chatroom for kawen's stream and leave the previous room.
-`/kick lain` Available only in your own room if you are a streamer. Forcefully disconnect the user.
-`/ban lain (time)` Ban a user from your room. Bans are based on IP address. The optional time is in minutes. The default is 30.
+`/nick sally (password)` Password is only required if sally is a registered user.
+`/join sally` Join the chatroom for sally's stream and leave the previous room.
+`/kick bob` Available only in your own room if you are a streamer. Forcefully disconnect the user.
+`/ban bob (time)` Ban a user from your room. Bans are based on IP address. The optional time is in minutes. The default is 30.
 `/banlist` List the IPs currently banned from your room.
 `/unban (ip)` self explanatory
 
+You can set up mirroring to and from webchat rooms and IRC channels, twitch streams, and discord server channels.
+More information is in CONFIGURATION.md
+
 #### Streaming
 Users should stream to rtmp://example.tld/stream/examplestreamkey
-The stream will be available at rtmp://example.tld/live/kawen and http://example.tld/live/kawen/index.m3u8 or .mpd if you've enabled DASH. (Enabling both HLS and DASH is not recommended for most use cases.)
+The stream will be available at rtmp://example.tld/live/kawen and http://example.tld/live/kawen/index.mpd
 
 Most software, such as OBS, will have a separate field for the URL and stream key, in which case the user can enter rtmp://example.tld/stream/ and the stream key in the appropriate field.
