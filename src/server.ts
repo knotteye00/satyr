@@ -41,7 +41,7 @@ function init () {
 				while(true){
 					if(session.audioCodec !== 0 && session.videoCodec !== 0){
 						transCommand(results[0].username, key).then((r) => {
-							execFile(config['media']['ffmpeg'], r, {maxBuffer: Infinity});
+							execFile(config['media']['ffmpeg'], r, {maxBuffer: Infinity}, (err, stdout, stderr) => {});
 						});
 						break;
 					}
@@ -112,12 +112,12 @@ function init () {
 }
 
 async function transCommand(user: string, key: string): Promise<string[]>{
-	let args: string[] = ['-loglevel', 'fatal', '-y', '-i', 'rtmp://127.0.0.1:'+config['rtmp']['port']+'/'+config['media']['privateEndpoint']+'/'+key];
+	let args: string[] = [/*'-loglevel', 'fatal',*/ '-y', '-i', 'rtmp://127.0.0.1:'+config['rtmp']['port']+'/'+config['media']['privateEndpoint']+'/'+key];
 	if(config['transcode']['adaptive']===true && config['transcode']['variants'] > 1) {
 		for(let i=0;i<config['transcode']['variants'];i++){
 			args = args.concat(['-map', '0:2']);
 		}
-		args = args.concat(['-map', '0:1', '-c:a', 'copy', '-c:v:0', 'copy']);
+		args = args.concat(['-map', '0:1', '-c:a', 'aac', '-c:v:0', 'libx264']);
 		for(let i=1;i<config['transcode']['variants'];i++){
 			args = args.concat(['-c:v:'+i, 'libx264',]);
 		}
@@ -131,7 +131,7 @@ async function transCommand(user: string, key: string): Promise<string[]>{
 		}
 	}
 	else {
-		args = args.concat(['-c:a', 'copy', '-c:v', 'copy']);
+		args = args.concat(['-c:a', 'aac', '-c:v', 'libx264']);
 	}
 	//if(config['transcode']['format'] === 'dash')
 	args = args.concat(['-remove_at_exit', '1', '-seg_duration', '1', '-window_size', '30', '-f', 'dash', config['http']['directory']+'/'+config['media']['publicEndpoint']+'/'+user+'/index.mpd']);
