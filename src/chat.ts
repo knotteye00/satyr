@@ -18,11 +18,11 @@ async function init() {
 	if(config['chat']['discord']['enabled']){
 		discordClient = new discord.Client();
 		discordClient.once('ready', ()=>{ console.log('Discord bot ready')});
-		discordClient.on('message', (msg) => {
+		discordClient.on('message', async (msg) => {
 			if(msg['author']['bot']) return;
 			var lu = getUsr(msg['channel']['name'], 'discord')
 			for(var i=0;i<lu.length;i++){
-				sendAll(lu[i], [msg['author']['username'], msg['content']], "discord")
+				sendAll(lu[i], [msg['author']['username'], await normalizeDiscordMsg(msg)], "discord");
 			}
 		});
 		discordClient.login(config['chat']['discord']['token']);
@@ -182,6 +182,46 @@ async function updateTwitchChan() {
 	for(var i=0;i<clist.length;i++){
 		twitchClient.join(clist[i]);
 	}
+}
+
+async function normalizeDiscordMsg(msg): Promise<string>{
+	var nmsg: string=msg['content'];
+	
+	//normalize user mentions
+	var uarray = await msg['mentions']['users'].array();
+	var karray = await msg['mentions']['users'].keyArray();
+	for(var i=0;i<karray.length;i++){
+		var usr = uarray[i];
+		nmsg = nmsg.replace(new RegExp('<@!'+karray[i]+'>', 'g'), '@'+usr['username']);
+	}
+	
+	//normalize emoji
+	var e = nmsg.match(new RegExp('<:\\w+:[0-9]+>', 'g'));
+		//<:.+:.+>
+	if(e !== null)
+	for (var i=0;i<e.length;i++){
+		nmsg = nmsg.replace(e[i], e[i].match(new RegExp(':\\w+:', 'g'))[0]);
+	}
+	//in 10 minutes, I will have forgot what all of this regex does.
+	
+	//normalize role mentions
+	var uarray = await msg['mentions']['roles'].array();
+	var karray = await msg['mentions']['roles'].keyArray();
+	for(var i=0;i<karray.length;i++){
+		var role = uarray[i];
+		nmsg = nmsg.replace(new RegExp('<@&'+karray[i]+'>', 'g'), '@'+role['name']);
+	}
+	
+	//normalize channel mentions
+	var c = nmsg.match(new RegExp('<#[0-9]+>', 'g'));
+	if(c !== null)
+	for(var i=0;i<c.length;i++){
+		nmsg = nmsg.replace(c[i], '#'+discordClient.channels.get(c[i].match(new RegExp('[0-9]+', 'g'))[0])['name']);
+	}
+
+	//fuck me this better work
+
+	return nmsg;
 }
 
 export { init, sendAll };
