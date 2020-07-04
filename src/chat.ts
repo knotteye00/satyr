@@ -8,6 +8,7 @@ import * as twitch from "dank-twitch-irc";
 var ircClient;
 var xmppClient;
 var twitchClient;
+var twitchArr: Array<string> = [];
 var discordClient;
 var liveUsers: Array<any>;
 var chatIntegration: Array<any>;
@@ -71,6 +72,15 @@ async function init() {
 			for(var i=0;i<lu.length;i++){
 				sendAll(lu[i], [msg['displayName'], msg['messageText']], "twitch");
 			}
+		});
+		//this library doesn't internally track which channels are currently joined, so we have to do it ourself
+		twitchClient.on('JOIN', (m) => {
+			if(twitchArr.indexOf(m['channelName']) === -1)
+				twitchArr.push(m['channelName']);
+		});
+		twitchClient.on('PART', (m) => {
+			if(twitchArr.indexOf(m['channelName']) !== -1)
+				twitchArr.splice(twitchArr.indexOf(m['channelName']), 1);
 		});
 		twitchClient.connect();
 	}
@@ -165,22 +175,38 @@ function getUsr(channel: string, ctype: string): Array<string>{
 }
 
 async function updateIRCChan() {
-	var clist: Array<string> = [];
+	var ilist: Array<string> = [];
 	for(var i=0;i<chatIntegration.length;i++){
-		if(chatIntegration[i]['irc'].trim() !== "" && chatIntegration[i]['irc'] !== null) clist.push(chatIntegration[i]['irc']);
+		if(chatIntegration[i]['irc'].trim() !== "" && chatIntegration[i]['irc'] !== null) {
+			ilist.push(chatIntegration[i]['irc']);
+		}
 	}
-	for(var i=0;i<clist.length;i++){
-		ircClient.join(clist[i]);
+	//do this to avoid duplicate channel joins
+	//and leave IRC channels when done
+	var tmp: Array<string> = ilist.filter(n => !Object.keys(ircClient.chans).includes(n)); //channels to join
+	for(var i=0;i<tmp.length;i++){
+		ircClient.join(tmp[i]);
+	}
+	tmp = Object.keys(ircClient.chans).filter(n => !ilist.includes(n)); //channels to part
+	for(var i=0;i<tmp.length;i++){
+		ircClient.part(tmp[i]);
 	}
 }
 
 async function updateTwitchChan() {
-	var clist: Array<string> = [];
+	var ilist: Array<string> = [];
 	for(var i=0;i<chatIntegration.length;i++){
-		if(chatIntegration[i]['twitch'].trim() !== "" && chatIntegration[i]['twitch'] !== null) clist.push(chatIntegration[i]['twitch']);
+		if(chatIntegration[i]['twitch'].trim() !== "" && chatIntegration[i]['twitch'] !== null) ilist.push(chatIntegration[i]['twitch']);
 	}
-	for(var i=0;i<clist.length;i++){
-		twitchClient.join(clist[i]);
+	//do this to avoid duplicate channel joins
+	//and leave twitch channels when done
+	var tmp: Array<string> = ilist.filter(n => !twitchArr.includes(n)); //channels to join
+	for(var i=0;i<tmp.length;i++){
+		twitchClient.join(tmp[i]);
+	}
+	tmp = twitchArr.filter(n => !ilist.includes(n)); //channels to part
+	for(var i=0;i<tmp.length;i++){
+		twitchClient.part(tmp[i]);
 	}
 }
 
