@@ -2,12 +2,13 @@
 
 System dependencies: A stable version of node>=10, mysql3 (or a compatible implementation such as MariaDB), and ffmpeg >=4.2
 
-### Setup Instructions
+### Build Instructions
 ```bash
 git clone https://gitlab.com/knotteye/satyr.git
 cd satyr
 npm install
 npm run setup
+npm run build
 ```
 Follow the instructions after setup runs.
 
@@ -15,3 +16,10 @@ Follow the instructions after setup runs.
 ```bash
 npm start
 ```
+
+## Contributing
+
+1. Fork the repository
+2. Create new feature branch
+3. Write Code
+4. Create an request to merge back into develop
