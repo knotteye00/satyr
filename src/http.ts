@@ -140,6 +140,33 @@ async function parseCookie(c){
 }
 
 async function initAPI() {
+	app.get('/api/instance/info', (req, res) => {
+		res.send(
+			JSON.stringify({
+				name: config['satyr']['name'],
+				domain: config['satyr']['name'],
+				registration: config['satyr']['registration'],
+				version: config['satyr']['version'],
+				email: config['satyr']['email']
+			})
+		);
+	});
+	app.get('/api/instance/config', (req, res) => {
+		res.send(
+			JSON.stringify({
+				rtmp: {
+					port: config['rtmp']['port'],
+					ping_timeout: config['rtmp']['ping_timeout']
+				},
+				media: {
+					vods: config['config']['media']['record'],
+					publicEndpoint: config['media']['publicEndpoint'],
+					privateEndpoint: config['media']['privateEndpoint'],
+					adaptive: config['transcode']['adaptive']
+				}
+			})
+		);
+	});
 	app.get('/api/users/live', (req, res) => {
 		db.query('select username,title from user_meta where live=1 limit 10;').then((result) => {
 			res.send(result);
@@ -284,7 +311,17 @@ async function initAPI() {
 				}
 			});
 		}
-	})
+	});
+	app.get('/api/:user/vods/list', (req, res) => {
+		readdir('./site/live/'+req.params.user, {withFileTypes: true} , (err, files) => {
+			if(err) {
+				res.send([]);
+				return;
+			}
+			var list = files.filter(fn => fn.name.endsWith('.mp4'));
+			res.send(list);
+		});
+	});
 }
 
 async function initSite(openReg) {
