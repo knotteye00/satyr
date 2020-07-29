@@ -9,6 +9,7 @@ const config: Object = {
 	   name: '',
 	   domain: '',
 	   registration: false,
+	   email: null,
 	   restrictedNames: [ 'live' ],
 	   rootredirect: '/users/live',
 	   version: process.env.npm_package_version,
