@@ -132,7 +132,7 @@ Response: Returns `{error: "error code"}` or `{success: ""}`
 
 
 
-## /api/user/vods/delete
+### /api/user/vods/delete
 
 Delete the specified vods of the current user
 
@@ -144,7 +144,7 @@ Paramters: A string array of the names of vods to be deleted.
 
 Response: Returns `{error: "error code"}` or `{success: ""}`
 
-## /api/user/password
+### /api/user/password
 
 Change the current user's password
 
@@ -158,7 +158,7 @@ Response: Returns `{error: "error code"}` or `{success: ""}`
 
 
 
-## /api/user/streamkey
+### /api/user/streamkey
 
 Change the current user's stream key. This will not affect the stream if the user is currently live.
 
@@ -170,7 +170,7 @@ Parameters: A valid JWT cookie. No other parameters.
 
 Response: Returns `{error: "error code"}` or `{success: "new_stream_key"}`
 
-## /api/:user/vods/list
+### /api/:user/vods/list
 
 Get a list of the named users VODs
 
@@ -183,3 +183,20 @@ Parameters: none
 Response: Returns an array of VODs with the format `[{"name":"yote.mp4"},{"name":"yeet.mp4"}]`
 
 Notes: VODs are always available at http://domain.com/publicEndpoint/username/filename.mp4
+
+
+
+
+## Not Yet Implemented
+
+#### /api/:user/info
+
+List bio, stream title. If authenticated, list all settings.
+
+#### /api/user/streamkey/current
+
+Return current stream key
+
+#### /api/users/live
+
+Paging and sorting coming Soon(tm)
