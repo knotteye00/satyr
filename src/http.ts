@@ -167,24 +167,65 @@ async function initAPI() {
 			})
 		);
 	});
-	app.get('/api/users/live', (req, res) => {
-		if(req.params.sort) {
+	app.post('/api/users/live', (req, res) => {
+		let qs = 'SELECT username,title FROM user_meta WHERE live=1';
 
+		if(req.body.sort) {
+			switch (req.body.sort) {
+				case "alphabet":
+					qs += ' ORDER BY username ASC';
+					break;
+				case "alphabet-r":
+					qs += ' ORDER BY username DESC';
+					break;
+				default:
+					break;
+			}
 		}
-		if(req.params.num){
 
+		if(!req.body.num || req.body.num > 50 || req.body.num === NaN || req.body.num === Infinity || typeof(req.body.num) !== 'number'){
+			req.body.num = 10;
 		}
-		db.query('select username,title from user_meta where live=1 limit 10;').then((result) => {
-			res.send(result);
+		qs += ' LIMIT '+req.body.num;
+
+		if(req.body.page && typeof(req.body.page) === 'number' && req.body.page !== NaN && req.body.page !== Infinity){
+			qs += ' OFFSET '+Math.floor(req.body.num * req.body.page);
+		}
+
+		db.query(qs+';').then((result) => {
+			if(result) res.send(result);
+			else res.send('{"error":""}');
 		});
 	});
-	app.get('/api/users/all', (req, res) => {
-		if(req.params.sort) {
+	app.post('/api/users/all', (req, res) => {
+		let qs = 'SELECT username,title FROM user_meta';
 
+		if(req.body.sort) {
+			switch (req.body.sort) {
+				case "alphabet":
+					qs += ' ORDER BY username ASC';
+					break;
+				case "alphabet-r":
+					qs += ' ORDER BY username DESC';
+					break;
+				default:
+					break;
+			}
 		}
-		if(req.params.num) {
 
+		if(!req.body.num || req.body.num > 50 || req.body.num === NaN || req.body.num === Infinity || typeof(req.body.num) !== 'number'){
+			req.body.num = 10;
 		}
+		qs += ' LIMIT '+req.body.num;
+
+		if(req.body.page && typeof(req.body.page) === 'number' && req.body.page !== NaN && req.body.page !== Infinity){
+			qs += ' OFFSET '+Math.floor(req.body.num * req.body.page);
+		}
+
+		db.query(qs+';').then((result) => {
+			if(result) res.send(result);
+			else res.send('{"error":""}');
+		});
 	});
 	app.post('/api/register', (req, res) => {
 		api.register(req.body.username, req.body.password, req.body.confirm).then( (result) => {
