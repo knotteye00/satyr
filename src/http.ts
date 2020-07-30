@@ -274,6 +274,19 @@ async function initAPI() {
 			}
 		});
 	});
+	app.get('/api/user/streamkey/current', (req, res) => {
+		validToken(req.cookies.Authorization).then((t) => {
+			if(t) {
+				db.query('SELECT stream_key FROM users WHERE username='+db.raw.escape(t['username'])).then(o => {
+					if(o[0]) res.send(o[0]);
+					else res.send('{"error":""}');
+				});
+			}
+			else {
+				res.send('{"error":"invalid token"}');
+			}
+		});
+	});
 	app.post('/api/user/streamkey', (req, res) => {
 		validToken(req.cookies.Authorization).then((t) => {
 			if(t) {

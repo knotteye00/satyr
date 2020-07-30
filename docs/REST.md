@@ -188,7 +188,9 @@ Notes: VODs are always available at http://domain.com/publicEndpoint/username/fi
 
 
 
-## /api/:user/config
+### /api/:user/config
+
+Get information about the specified user.
 
 Method: GET
 
@@ -202,8 +204,16 @@ Example: `{username: "foo", title: "bar", about: "This is an example bio"}`
 
 
 
-## Not Yet Implemented
-
 #### /api/user/streamkey/current
 
-Return current stream key
+Returns current stream key for the authenticated user.
+
+Method: GET
+
+Authentication: yes
+
+Parameters: none
+
+Response: returns a JSON object with the stream key
+
+Example: `{"stream_key": "abcdefghijklmno12345"}` or `{"error":"error reason"}`
