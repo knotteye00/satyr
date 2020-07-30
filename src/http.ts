@@ -167,15 +167,64 @@ async function initAPI() {
 			})
 		);
 	});
-	app.get('/api/users/live', (req, res) => {
-		db.query('select username,title from user_meta where live=1 limit 10;').then((result) => {
-			res.send(result);
+	app.post('/api/users/live', (req, res) => {
+		let qs = 'SELECT username,title FROM user_meta WHERE live=1';
+
+		if(req.body.sort) {
+			switch (req.body.sort) {
+				case "alphabet":
+					qs += ' ORDER BY username ASC';
+					break;
+				case "alphabet-r":
+					qs += ' ORDER BY username DESC';
+					break;
+				default:
+					break;
+			}
+		}
+
+		if(!req.body.num || req.body.num > 50 || req.body.num === NaN || req.body.num === Infinity || typeof(req.body.num) !== 'number'){
+			req.body.num = 10;
+		}
+		qs += ' LIMIT '+req.body.num;
+
+		if(req.body.page && typeof(req.body.page) === 'number' && req.body.page !== NaN && req.body.page !== Infinity){
+			qs += ' OFFSET '+Math.floor(req.body.num * req.body.page);
+		}
+
+		db.query(qs+';').then((result) => {
+			if(result) res.send(result);
+			else res.send('{"error":""}');
 		});
 	});
-	app.get('/api/users/live/:num', (req, res) => {
-		if(req.params.num > 50) req.params.num = 50;
-		db.query('select username,title from user_meta where live=1 limit '+req.params.num+';').then((result) => {
-			res.send(result);
+	app.post('/api/users/all', (req, res) => {
+		let qs = 'SELECT username,title FROM user_meta';
+
+		if(req.body.sort) {
+			switch (req.body.sort) {
+				case "alphabet":
+					qs += ' ORDER BY username ASC';
+					break;
+				case "alphabet-r":
+					qs += ' ORDER BY username DESC';
+					break;
+				default:
+					break;
+			}
+		}
+
+		if(!req.body.num || req.body.num > 50 || req.body.num === NaN || req.body.num === Infinity || typeof(req.body.num) !== 'number'){
+			req.body.num = 10;
+		}
+		qs += ' LIMIT '+req.body.num;
+
+		if(req.body.page && typeof(req.body.page) === 'number' && req.body.page !== NaN && req.body.page !== Infinity){
+			qs += ' OFFSET '+Math.floor(req.body.num * req.body.page);
+		}
+
+		db.query(qs+';').then((result) => {
+			if(result) res.send(result);
+			else res.send('{"error":""}');
 		});
 	});
 	app.post('/api/register', (req, res) => {
@@ -266,6 +315,19 @@ async function initAPI() {
 			}
 		});
 	});
+	app.get('/api/user/streamkey/current', (req, res) => {
+		validToken(req.cookies.Authorization).then((t) => {
+			if(t) {
+				db.query('SELECT stream_key FROM users WHERE username='+db.raw.escape(t['username'])).then(o => {
+					if(o[0]) res.send(o[0]);
+					else res.send('{"error":""}');
+				});
+			}
+			else {
+				res.send('{"error":"invalid token"}');
+			}
+		});
+	});
 	app.post('/api/user/streamkey', (req, res) => {
 		validToken(req.cookies.Authorization).then((t) => {
 			if(t) {
@@ -312,7 +374,7 @@ async function initAPI() {
 			});
 		}
 	});
-	app.get('/api/:user/vods/list', (req, res) => {
+	app.get('/api/:user/vods', (req, res) => {
 		readdir('./site/live/'+req.params.user, {withFileTypes: true} , (err, files) => {
 			if(err) {
 				res.send([]);
@@ -320,6 +382,23 @@ async function initAPI() {
 			}
 			var list = files.filter(fn => fn.name.endsWith('.mp4'));
 			res.send(list);
+		});
+	});
+	app.get('/api/:user/config', (req, res) => {
+		if(req.cookies.Authorization) validToken(req.cookies.Authorization).then(r => {
+			if(r && r['username'] === req.params.user) {
+				api.getConfig(req.params.user, true).then(re => {
+					res.send(JSON.stringify(re));
+				});
+				return;
+			}
+			else api.getConfig(req.params.user).then(re => {
+				res.send(JSON.stringify(re));
+			});
+			return;
+		});
+		else api.getConfig(req.params.user).then(r => {
+			res.send(JSON.stringify(r));
 		});
 	});
 }

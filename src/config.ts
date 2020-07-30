@@ -1,6 +1,11 @@
 import {parseAsYaml as parse} from "parse-yaml";
 import {readFileSync as read} from "fs";
-var localconfig: Object = parse(read('config/config.yml'));
+try {
+	var localconfig: Object = parse(read('config/config.yml'));
+} catch (e) {
+	console.log('No config file found. Exiting.');
+	process.exit();
+}
 const config: Object = {
 	crypto: Object.assign({ 
 		saltRounds: 12 
@@ -10,7 +15,7 @@ const config: Object = {
 	   domain: '',
 	   registration: false,
 	   email: null,
-	   restrictedNames: [ 'live' ],
+	   restrictedNames: [ 'live', 'user', 'users', 'register', 'login' ],
 	   rootredirect: '/users/live',
 	   version: process.env.npm_package_version,
 	 }, localconfig['satyr']),
