@@ -69,4 +69,21 @@ async function deleteVODs(vodlist: Array<string>, username: string): Promise<obj
 	return {"success":""};
 }
 
-export { register, update, changepwd, changesk, login, updateChat, deleteVODs };
+async function getConfig(username: string, all?: boolean): Promise<object>{
+	let t = {username: username};
+	if(all) {
+		let users = await db.query('SELECT stream_key,record_flag FROM users WHERE username='+db.raw.escape(username));
+		if(users[0]) Object.assign(t, users[0]);
+		let usermeta = await db.query('SELECT title,about FROM user_meta WHERE username='+db.raw.escape(username));
+		if(usermeta[0]) Object.assign(t, users[0]);
+		let ci = await db.query('SELECT irc,xmpp,twitch,discord FROM chat_integration WHERE username='+db.raw.escape(username));
+		if(ci[0]) Object.assign(t, ci[0]);
+	}
+	else {
+		let um = await db.query('SELECT title,about FROM user_meta WHERE username='+db.raw.escape(username));
+		if(um[0]) Object.assign(t, um[0]);
+	}
+	return t;
+}
+
+export { register, update, changepwd, changesk, login, updateChat, deleteVODs, getConfig };

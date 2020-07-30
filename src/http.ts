@@ -168,15 +168,23 @@ async function initAPI() {
 		);
 	});
 	app.get('/api/users/live', (req, res) => {
+		if(req.params.sort) {
+
+		}
+		if(req.params.num){
+
+		}
 		db.query('select username,title from user_meta where live=1 limit 10;').then((result) => {
 			res.send(result);
 		});
 	});
-	app.get('/api/users/live/:num', (req, res) => {
-		if(req.params.num > 50) req.params.num = 50;
-		db.query('select username,title from user_meta where live=1 limit '+req.params.num+';').then((result) => {
-			res.send(result);
-		});
+	app.get('/api/users/all', (req, res) => {
+		if(req.params.sort) {
+
+		}
+		if(req.params.num) {
+
+		}
 	});
 	app.post('/api/register', (req, res) => {
 		api.register(req.body.username, req.body.password, req.body.confirm).then( (result) => {
@@ -312,7 +320,7 @@ async function initAPI() {
 			});
 		}
 	});
-	app.get('/api/:user/vods/list', (req, res) => {
+	app.get('/api/:user/vods', (req, res) => {
 		readdir('./site/live/'+req.params.user, {withFileTypes: true} , (err, files) => {
 			if(err) {
 				res.send([]);
@@ -320,6 +328,23 @@ async function initAPI() {
 			}
 			var list = files.filter(fn => fn.name.endsWith('.mp4'));
 			res.send(list);
+		});
+	});
+	app.get('/api/:user/config', (req, res) => {
+		if(req.cookies.Authorization) validToken(req.cookies.Authorization).then(r => {
+			if(r && r['username'] === req.params.user) {
+				api.getConfig(req.params.user, true).then(re => {
+					res.send(JSON.stringify(re));
+				});
+				return;
+			}
+			api.getConfig(req.params.user).then(re => {
+				res.send(JSON.stringify(re));
+			});
+			return;
+		});
+		api.getConfig(req.params.user).then(r => {
+			res.send(JSON.stringify(r));
 		});
 	});
 }

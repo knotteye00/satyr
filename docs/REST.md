@@ -51,22 +51,24 @@ play from: rtmp://example.com/live/username or https://example.com/live/username
 
 ### /api/users/live/
 
+UNFINISHED
+
 Returns the usernames and stream titles of 10 users who are currently streaming
 
 Method: GET
 
 Authentication: no
 
-Parameters: none
+Parameters: num (optional), sort (optional)
 
 Response: Returns an array of objects containing the username and title of each stream. Returns an empty array if no one is streaming.
 
 Example: `[{username:"foo", title:"bar"}]`
 
 
-### /api/users/live/:num
+### /api/users/all
 
-Same as above, with number indicated the number of users to list. Maximum of 50.
+Same as above, but returns all users regardless of whether they are streaming. Also unfinished.
 
 
 
@@ -140,7 +142,7 @@ Method: POST
 
 Authentication: yes
 
-Paramters: A string array of the names of vods to be deleted.
+Paramters: A string array of the names of vods to be deleted. (Do not include the file extension);
 
 Response: Returns `{error: "error code"}` or `{success: ""}`
 
@@ -170,7 +172,7 @@ Parameters: A valid JWT cookie. No other parameters.
 
 Response: Returns `{error: "error code"}` or `{success: "new_stream_key"}`
 
-### /api/:user/vods/list
+### /api/:user/vods
 
 Get a list of the named users VODs
 
@@ -178,7 +180,7 @@ Method: GET
 
 Authentication: no
 
-Parameters: none
+Parameters: user
 
 Response: Returns an array of VODs with the format `[{"name":"yote.mp4"},{"name":"yeet.mp4"}]`
 
@@ -186,17 +188,22 @@ Notes: VODs are always available at http://domain.com/publicEndpoint/username/fi
 
 
 
+## /api/:user/config
+
+Method: GET
+
+Authentication: optional
+
+Parameters: user
+
+Response: Returns a JSON object with available information about the user. If the user is authenticated and searching for their own information, will return all available information. Otherwise it will return only the stream title and bio. In the case of searching for a user that does not exist, the returned object will contain only the username searched for.
+
+Example: `{username: "foo", title: "bar", about: "This is an example bio"}`
+
+
 
 ## Not Yet Implemented
-
-#### /api/:user/info
-
-List bio, stream title. If authenticated, list all settings.
 
 #### /api/user/streamkey/current
 
 Return current stream key
-
-#### /api/users/live
-
-Paging and sorting coming Soon(tm)
