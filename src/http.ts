@@ -338,12 +338,12 @@ async function initAPI() {
 				});
 				return;
 			}
-			api.getConfig(req.params.user).then(re => {
+			else api.getConfig(req.params.user).then(re => {
 				res.send(JSON.stringify(re));
 			});
 			return;
 		});
-		api.getConfig(req.params.user).then(r => {
+		else api.getConfig(req.params.user).then(r => {
 			res.send(JSON.stringify(r));
 		});
 	});

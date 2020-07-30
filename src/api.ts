@@ -1,4 +1,4 @@
-import * as db from "./database"
+import * as db from "./database";
 import { config } from "./config";
 import {unlink} from "fs";
 
