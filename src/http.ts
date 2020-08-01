@@ -144,7 +144,7 @@ async function initAPI() {
 		res.send(
 			JSON.stringify({
 				name: config['satyr']['name'],
-				domain: config['satyr']['name'],
+				domain: config['satyr']['domain'],
 				registration: config['satyr']['registration'],
 				version: config['satyr']['version'],
 				email: config['satyr']['email']
