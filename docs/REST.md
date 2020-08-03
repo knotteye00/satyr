@@ -68,9 +68,11 @@ sort is the optional way to sort results. current options are "alphabet" and "al
 
 page is the page number (i.e. skip the first num * page results)
 
-**Response**: Returns an array of objects containing the username and title of each stream. Returns an empty array if no one is streaming. Returns `{"error":"error code"}` in the event of an error. Will attempt to correct malformed requests to default values.
+**Response**: Returns an array of JSON objects containing the username and title of each stream. Returns an empty array if no one is streaming. Returns `{"error":"error code"}` in the event of an error. Will attempt to correct malformed requests to default values.
 
-**Example**: `[{username:"foo", title:"bar"}]`
+The array will be wrapped in a JSON object under the key 'users'.
+
+**Example**: `{users: [{username:"foo", title:"bar"}] }`
 
 
 ## /api/users/all
@@ -194,7 +196,7 @@ Get a list of the named users VODs
 
 **Parameters**: user
 
-**Response**: Returns an array of VODs with the format `[{"name":"yote.mp4"},{"name":"yeet.mp4"}]`
+**Response**: Returns an array of VODs inside a JSON object with the format `{"vods": [{"name":"yote.mp4"},{"name":"yeet.mp4"}] }`
 
 **Notes**: VODs are always available at http://domain.com/publicEndpoint/username/filename.mp4
 
