@@ -141,31 +141,27 @@ async function parseCookie(c){
 
 async function initAPI() {
 	app.get('/api/instance/info', (req, res) => {
-		res.send(
-			JSON.stringify({
-				name: config['satyr']['name'],
-				domain: config['satyr']['domain'],
-				registration: config['satyr']['registration'],
-				version: config['satyr']['version'],
-				email: config['satyr']['email']
-			})
-		);
+		res.json({
+			name: config['satyr']['name'],
+			domain: config['satyr']['domain'],
+			registration: config['satyr']['registration'],
+			version: config['satyr']['version'],
+			email: config['satyr']['email']
+		});
 	});
 	app.get('/api/instance/config', (req, res) => {
-		res.send(
-			JSON.stringify({
-				rtmp: {
-					port: config['rtmp']['port'],
-					ping_timeout: config['rtmp']['ping_timeout']
-				},
-				media: {
-					vods: config['config']['media']['record'],
-					publicEndpoint: config['media']['publicEndpoint'],
-					privateEndpoint: config['media']['privateEndpoint'],
-					adaptive: config['transcode']['adaptive']
-				}
-			})
-		);
+		res.json({
+			rtmp: {
+				port: config['rtmp']['port'],
+				ping_timeout: config['rtmp']['ping_timeout']
+			},
+			media: {
+				vods: config['config']['media']['record'],
+				publicEndpoint: config['media']['publicEndpoint'],
+				privateEndpoint: config['media']['privateEndpoint'],
+				adaptive: config['transcode']['adaptive']
+			}
+		});
 	});
 	app.post('/api/users/live', (req, res) => {
 		let qs = 'SELECT username,title FROM user_meta WHERE live=1';
@@ -193,8 +189,8 @@ async function initAPI() {
 		}
 
 		db.query(qs+';').then((result) => {
-			if(result) res.send(result);
-			else res.send('{"error":""}');
+			if(result) res.json({users: result});
+			else res.json({error:""});
 		});
 	});
 	app.post('/api/users/all', (req, res) => {
@@ -223,18 +219,18 @@ async function initAPI() {
 		}
 
 		db.query(qs+';').then((result) => {
-			if(result) res.send(result);
-			else res.send('{"error":""}');
+			if(result) res.json({users: result});
+			else res.json({error:""});
 		});
 	});
 	app.post('/api/register', (req, res) => {
 		api.register(req.body.username, req.body.password, req.body.confirm).then( (result) => {
 			if(result[0]) return genToken(req.body.username).then((t) => {
 				res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
-				res.send(result);
+				res.json(result);
 				return;
 			});
-			res.send(result);
+			res.json(result);
 		});
 	});
 	app.post('/api/user/update', (req, res) => {
@@ -247,12 +243,12 @@ async function initAPI() {
 					bio: "bio" in req.body ? req.body.bio : false,
 					rec: "record" in req.body ? req.body.record : "NA"
 				}).then((r) => {
-					res.send(r);
+					res.json(r);
 					return;
 				});
 			}
 			else {
-				res.send('{"error":"invalid token"}');
+				res.json({error:"invalid token"});
 				return;
 			}
 		});
@@ -269,12 +265,12 @@ async function initAPI() {
 					twitch: "twitch" in req.body ? req.body.twitch : false,
 					irc: "irc" in req.body ? req.body.irc : false,
 				}).then((r) => {
-					res.send(r);
+					res.json(r);
 					return;
 				});
 			}
 			else {
-				res.send('{"error":"invalid token"}');
+				res.json({error:"invalid token"});
 				return;
 			}
 		});
@@ -284,19 +280,19 @@ async function initAPI() {
 	});
 	app.post('/api/user/vods/delete', (req, res) => {
 		if(req.body.vlist === undefined || req.body.vlist === null || req.body.vlist === []){
-			res.send('{"error":"no vods specified"}');
+			res.json({error:"no vods specified"});
 			return;
 		}
 		validToken(req.cookies.Authorization).then((t) => {
 			if(t) {
 				//token is valid, process deletion request
 				return api.deleteVODs(req.body.vlist, t['username']).then((r)=> {
-					res.send(r)
+					res.json(r)
 					return;
 				});
 			}
 			else {
-				res.send('{"error":"invalid token"}');
+				res.json({error:"invalid token"});
 				return;
 			}
 		});
@@ -305,12 +301,12 @@ async function initAPI() {
 		validToken(req.cookies.Authorization).then((t) => {
 			if(t) {
 				return api.changepwd(t['username'], req.body.password, req.body.newpassword).then((r) => {
-					res.send(r);
+					res.json(r);
 					return;
 				});
 			}
 			else {
-				res.send('{"error":"invalid token"}');
+				res.json({error:"invalid token"});
 				return;
 			}
 		});
@@ -319,12 +315,12 @@ async function initAPI() {
 		validToken(req.cookies.Authorization).then((t) => {
 			if(t) {
 				db.query('SELECT stream_key FROM users WHERE username='+db.raw.escape(t['username'])).then(o => {
-					if(o[0]) res.send(o[0]);
-					else res.send('{"error":""}');
+					if(o[0]) res.json(o[0]);
+					else res.json({error:""});
 				});
 			}
 			else {
-				res.send('{"error":"invalid token"}');
+				res.json({error:"invalid token"});
 			}
 		});
 	});
@@ -332,11 +328,11 @@ async function initAPI() {
 		validToken(req.cookies.Authorization).then((t) => {
 			if(t) {
 				api.changesk(t['username']).then((r) => {
-					res.send(r);
+					res.json(r);
 				});
 			}
 			else {
-				res.send('{"error":"invalid token"}');
+				res.json({error:"invalid token"});
 			}
 		});
 	});
@@ -346,17 +342,17 @@ async function initAPI() {
 				if(t['exp'] - 86400 < Math.floor(Date.now() / 1000)){
 					return genToken(t['username']).then((t) => {
 						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
-						res.send('{"success":""}');
+						res.json({success:""});
 						return;
 					});
 				}
 				else {
-					res.send('{"success":"already verified"}');
+					res.json({success:"already verified"});
 					return;
 				}
 			}
 			else {
-				res.send('{"error":"invalid token"}');
+				res.json({error:"invalid token"});
 				return;
 			}
 		});
@@ -365,11 +361,11 @@ async function initAPI() {
 				if(!result){
 					genToken(req.body.username).then((t) => {
 						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
-						res.send('{"success":""}');
+						res.json({success:""});
 					})
 				}
 				else {
-					res.send(result);
+					res.json(result);
 				}
 			});
 		}
@@ -377,28 +373,28 @@ async function initAPI() {
 	app.get('/api/:user/vods', (req, res) => {
 		readdir('./site/live/'+req.params.user, {withFileTypes: true} , (err, files) => {
 			if(err) {
-				res.send([]);
+				res.json({vods: []});
 				return;
 			}
 			var list = files.filter(fn => fn.name.endsWith('.mp4'));
-			res.send(list);
+			res.json({vods: list});
 		});
 	});
 	app.get('/api/:user/config', (req, res) => {
 		if(req.cookies.Authorization) validToken(req.cookies.Authorization).then(r => {
 			if(r && r['username'] === req.params.user) {
 				api.getConfig(req.params.user, true).then(re => {
-					res.send(JSON.stringify(re));
+					res.json(re);
 				});
 				return;
 			}
 			else api.getConfig(req.params.user).then(re => {
-				res.send(JSON.stringify(re));
+				res.json(re);
 			});
 			return;
 		});
 		else api.getConfig(req.params.user).then(r => {
-			res.send(JSON.stringify(r));
+			res.json(r);
 		});
 	});
 }

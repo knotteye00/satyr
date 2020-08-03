@@ -14,7 +14,7 @@ async function register(name: string, password: string, confirm: string): Promis
 		let k = await db.query('select stream_key from users where username='+db.raw.escape(name));
 		return k;
 	}
-	return {"error":""};
+	return {error:""};
 }
 
 async function update(fields: object): Promise<object>{
@@ -32,12 +32,12 @@ async function update(fields: object): Promise<object>{
 		qs += ' users.record_flag='+db.raw.escape(fields['rec']);
 	}
 	await db.query('UPDATE users,user_meta SET'+qs+' WHERE users.username='+db.raw.escape(fields['name'])+' AND user_meta.username='+db.raw.escape(fields['name']));
-	return {"success":""};
+	return {success:""};
 }
 
 async function updateChat(fields: object): Promise<object>{
 	await db.query('UPDATE chat_integration SET xmpp='+db.raw.escape(fields['xmpp'])+', discord='+db.raw.escape(fields['discord'])+', irc='+db.raw.escape(fields['irc'])+', twitch='+db.raw.escape(fields['twitch'])+' WHERE username='+db.raw.escape(fields['name']));
-	return {"success":""};
+	return {success:""};
 }
 
 async function changepwd(name: string, password: string, newpwd: string): Promise<object>{
@@ -46,13 +46,13 @@ async function changepwd(name: string, password: string, newpwd: string): Promis
 	if(!auth) return {"error":"Username or Password Incorrect"};
 	let newhash: string = await db.hash(newpwd);
 	await db.query('UPDATE users set password_hash='+db.raw.escape(newhash)+'where username='+db.raw.escape(name)+' limit 1');
-	return {"success":""};
+	return {success:""};
 }
 
 async function changesk(name: string): Promise<object>{
 	let key: string = await db.genKey();
 	await db.query('UPDATE users set stream_key='+db.raw.escape(key)+'where username='+db.raw.escape(name)+' limit 1');
-	return {"success":key};
+	return {success: key};
 }
 
 async function login(name: string, password: string){
@@ -66,7 +66,7 @@ async function deleteVODs(vodlist: Array<string>, username: string): Promise<obj
 	for(var i=0;i<vodlist.length;i++){
 		unlink('./site/live/'+username+'/'+vodlist[i], ()=>{});
 	}
-	return {"success":""};
+	return {success: ""};
 }
 
 async function getConfig(username: string, all?: boolean): Promise<object>{
