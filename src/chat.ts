@@ -94,12 +94,14 @@ async function updateUsers() {
 async function updateInteg() {
 	if(liveUsers.length === 0) {
 		chatIntegration = [];
+		if(config['chat']['irc']['enabled']) updateIRCChan();
+		if(config['chat']['twitch']['enabled']) updateTwitchChan();
 		return;
 	}
 	if(liveUsers.length === 1) {
 		chatIntegration = await db.query('SELECT * FROM chat_integration WHERE username='+db.raw.escape(liveUsers[0]['username']));
-		updateIRCChan();
-		updateTwitchChan();
+		if(config['chat']['irc']['enabled']) updateIRCChan();
+		if(config['chat']['twitch']['enabled']) updateTwitchChan();
 		return;
 	}
 	var qs: string;
@@ -108,8 +110,8 @@ async function updateInteg() {
 	}
 	qs = qs.substring(0, qs.length - 13);
 	chatIntegration = await db.query('SELECT * FROM chat_integration WHERE username='+qs);
-	updateIRCChan();
-	updateTwitchChan();
+	if(config['chat']['irc']['enabled']) updateIRCChan();
+	if(config['chat']['twitch']['enabled']) updateTwitchChan();
 }
 
 async function sendAll(user: string, msg: Array<string>, src: string) {
