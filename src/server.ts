@@ -42,9 +42,9 @@ function init () {
 					if(session.audioCodec !== 0 && session.videoCodec !== 0){
 						transCommand(results[0].username, key).then((r) => {
 							execFile(config['media']['ffmpeg'], r, {maxBuffer: Infinity}, (err, stdout, stderr) => {
-								console.log(err);
+								/*console.log(err);
 								console.log(stdout);
-								console.log(stderr);
+								console.log(stderr);*/
 							});
 						});
 						break;
