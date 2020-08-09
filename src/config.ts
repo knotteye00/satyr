@@ -46,7 +46,9 @@ const config: Object = {
 	transcode: Object.assign({ 
 		adapative: false, 
 		variants: 3, 
-		format: 'dash' 
+		format: 'dash',
+		inputflags: null,
+		outputflags: null
 	}, localconfig['transcode']),
 	chat: {
 		irc: Object.assign({
