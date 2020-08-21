@@ -12,6 +12,13 @@ function init (){
 	console.log('Connected to database.');
 }
 
+function initRTMPCluster(){
+	let cfg = config['database'];
+	cfg['connectionLimit'] = Math.floor(config['database']['connectionLimit'] / require('os').cpus().length);
+	raw = mysql.createPool(cfg);
+	cryptoconfig = config['crypto'];
+}
+
 async function addUser(name: string, password: string){
 	//does not respect registration setting in config
 	if(password === '') return false;
@@ -63,4 +70,4 @@ async function hash(pwd){
 	return await bcrypt.hash(pwd, cryptoconfig['saltRounds']);
 }
 
-export { query, raw, init, addUser, rmUser, validatePassword, hash, genKey };
+export { query, raw, init, addUser, rmUser, validatePassword, hash, genKey, initRTMPCluster };
