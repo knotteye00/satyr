@@ -156,7 +156,7 @@ async function initAPI() {
 				ping_timeout: config['rtmp']['ping_timeout']
 			},
 			media: {
-				vods: config['config']['media']['record'],
+				vods: config['media']['record'],
 				publicEndpoint: config['media']['publicEndpoint'],
 				privateEndpoint: config['media']['privateEndpoint'],
 				adaptive: config['transcode']['adaptive']
