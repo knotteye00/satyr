@@ -194,7 +194,7 @@ async function initAPI() {
 		});
 	});
 	app.post('/api/users/all', (req, res) => {
-		let qs = 'SELECT username,title FROM user_meta';
+		let qs = 'SELECT username,title,live FROM user_meta';
 
 		if(req.body.sort) {
 			switch (req.body.sort) {
