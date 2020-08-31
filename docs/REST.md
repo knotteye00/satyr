@@ -77,7 +77,7 @@ The array will be wrapped in a JSON object under the key 'users'.
 
 ## /api/users/all
 
-Same as above, but returns all users regardless of whether they are streaming and if they're streaming or not. Also unfinished.
+Same as above, but returns all users regardless of whether they are streaming and if they're streaming or not.
 
 **Example**: `{users: [{username:"foo", title:"bar", live:1}] }`
 
