@@ -9,6 +9,7 @@ var cryptoconfig: Object;
 function init (){
 	raw = mysql.createPool(config['database']);
 	cryptoconfig = config['crypto'];
+	console.log('Connected to database.');
 }
 
 async function addUser(name: string, password: string){

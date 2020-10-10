@@ -7,7 +7,8 @@
 	"scripts": {
 		"start": "ts-node src/index.ts",
 		"user": "ts-node src/cli.ts",
-		"setup": "sh install/setup.sh"
+		"setup": "sh install/setup.sh",
+		"migrate": "ts-node src/migrate.ts"
 	},
 	"repository": {
 		"type": "git",
