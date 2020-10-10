@@ -13,7 +13,13 @@ Follow the instructions after setup runs.
 
 ### Run the server
 ```bash
-npm start
+npm run start
+```
+You can also run this to skip checking the database version on startup.
+```bash
+npm run start -- --skip-migrate
+# don't forget to migrate manually when you update
+npm run migrate
 ```
 
 ## Contributing

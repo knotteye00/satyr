@@ -2,6 +2,7 @@ import {parseAsYaml as parse} from "parse-yaml";
 import {readFileSync as read} from "fs";
 try {
 	var localconfig: Object = parse(read('config/config.yml'));
+	console.log('Config file found.');
 } catch (e) {
 	console.log('No config file found. Exiting.');
 	process.exit();
