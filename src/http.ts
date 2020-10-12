@@ -238,10 +238,14 @@ async function initAPI() {
 			if(t) {
 				if(req.body.record === "true") req.body.record = true;
 				else if(req.body.record === "false") req.body.record = false;
+				if(req.body.twitch === "true") req.body.twitch = true;
+				else if(req.body.twitch === "false") req.body.twitch = false;
 				return api.update({name: t['username'],
 					title: "title" in req.body ? req.body.title : false,
 					bio: "bio" in req.body ? req.body.bio : false,
-					rec: "record" in req.body ? req.body.record : "NA"
+					rec: "record" in req.body ? req.body.record : "NA",
+					twitch: "twitch" in req.body ? req.body.twitch: "NA",
+					twitch_key: "twitch_key" in req.body ? req.body.twitch_key : false
 				}).then((r) => {
 					res.json(r);
 					return;
