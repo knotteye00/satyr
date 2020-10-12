@@ -496,7 +496,9 @@ async function initSite(openReg) {
 		if(tryDecode(req.cookies.Authorization)) {
 			db.query('select * from user_meta where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((result) => {
 				db.query('select record_flag from users where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((r2) => {
-					res.render('profile.njk', Object.assign({rflag: r2[0]}, {meta: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+					db.query('select enabled from twitch_mirror where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((r3) => {
+						res.render('profile.njk', Object.assign({twitch: r3[0]}, {rflag: r2[0]}, {meta: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+					});
 				});
 			});
 			//res.render('profile.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
