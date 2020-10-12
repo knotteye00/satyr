@@ -124,9 +124,9 @@ Update the current user's information
 
 **Authentication**: yes
 
-**Parameters**: title, bio, rec
+**Parameters**: title, bio, rec, twitch, twitch_key
 
-Rec is a boolean (whether to record VODs), others are strings. Parameters that are not included in the request will not be updated.
+Rec is a boolean (whether to record VODs), twitch is a boolean (whether to mirror video streams to twitch) others are strings. Twitch_key is the stream key to use for twitch. Parameters that are not included in the request will not be updated.
 
 **Response**: Returns `{error: "error code"}` or `{success: ""}`
 
