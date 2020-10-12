@@ -57,3 +57,7 @@ chat:
     username:
     #https://twitchapps.com/tmi/
     password:
+
+twitch_mirror:
+# enable to allow users to mirror video streams to twitch
+  enabled: false
