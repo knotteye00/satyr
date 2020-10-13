@@ -1,4 +1,5 @@
 import * as db from "./database";
+import * as base64id from "base64id";
 import { config } from "./config";
 import {unlink} from "fs";
 
@@ -97,4 +98,18 @@ async function getConfig(username: string, all?: boolean): Promise<object>{
 	return t;
 }
 
-export { register, update, changepwd, changesk, login, updateChat, deleteVODs, getConfig };
+async function genInvite(user: string): Promise<string>{
+	var invitecode: string = base64id.generateId();
+	await db.query('INSERT INTO invites (code) VALUES ('+invitecode+')');
+	return invitecode;
+}
+
+async function useInvite(code: string): Promise<boolean>{
+	if(typeof(code) !== "string" || code === "") return false;
+	var result = await db.query('SELECT code FROM invites WHERE code='+db.raw.escape(code));
+	if(!result[0] || result[0]['code'] !== code) return false;
+	await db.query('DELETE FROM invites WHERE code='+db.raw.escape(code));
+	return true;
+}
+
+export { register, update, changepwd, changesk, login, updateChat, deleteVODs, getConfig, genInvite, useInvite };
