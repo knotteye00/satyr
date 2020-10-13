@@ -6,9 +6,10 @@
 	"author": "knotteye",
 	"scripts": {
 		"start": "ts-node src/index.ts",
-		"user": "ts-node src/cli.ts",
+		"cli": "ts-node src/cli.ts",
 		"setup": "sh install/setup.sh",
-		"migrate": "ts-node src/migrate.ts"
+		"migrate": "ts-node src/migrate.ts",
+		"invite": "ts-node src/cli.ts --invite"
 	},
 	"repository": {
 		"type": "git",

@@ -98,9 +98,9 @@ async function getConfig(username: string, all?: boolean): Promise<object>{
 	return t;
 }
 
-async function genInvite(user: string): Promise<string>{
+async function genInvite(): Promise<string>{
 	var invitecode: string = base64id.generateId();
-	await db.query('INSERT INTO invites (code) VALUES ('+invitecode+')');
+	await db.query('INSERT INTO invites (code) VALUES (\"'+invitecode+'\")');
 	return invitecode;
 }
 
