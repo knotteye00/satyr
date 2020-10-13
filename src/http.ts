@@ -224,6 +224,23 @@ async function initAPI() {
 		});
 	});
 	app.post('/api/register', (req, res) => {
+		if("invite" in req.body){
+			api.validInvite(req.body.invite).then((v) => {
+				if(v){
+					api.register(req.body.username, req.body.password, req.body.confirm, true).then((result) => {
+						if(result[0]) return genToken(req.body.username).then((t) => {
+							res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
+							res.json(result);
+							api.useInvite(req.body.invite);
+							return;
+						});
+						res.json(result);
+					});
+				}
+				else res.json({error: "invalid invite code"});
+			});	
+		}
+		else
 		api.register(req.body.username, req.body.password, req.body.confirm).then( (result) => {
 			if(result[0]) return genToken(req.body.username).then((t) => {
 				res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
@@ -485,6 +502,12 @@ async function initSite(openReg) {
 			res.redirect('/profile');
 		}
 		else res.render('login.njk',njkconf);
+	});
+	app.get('/invite/:code', (req, res) => {
+		if(tryDecode(req.cookies.Authorization)) {
+			res.redirect('/profile');
+		}
+		else res.render('invite.njk',Object.assign({icode: req.params.code}, njkconf));
 	});
 	app.get('/register', (req, res) => {
 		if(tryDecode(req.cookies.Authorization) || !openReg) {

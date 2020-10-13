@@ -91,7 +91,9 @@ Register a new user.
 
 **Authentication**: no
 
-**Parameters**: Username, password, confirm
+**Parameters**: Username, password, confirm, invite(optional)
+
+Invite is an optional invite code to bypass disabled registration.
 
 **Response**: If successful, returns a json object with the users stream key. Otherwise returns `{error: "error reason"}`
 
