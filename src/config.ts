@@ -81,6 +81,10 @@ const config: Object = {
 			username: null,
 			token: null
 		}, localconfig['chat']['twitch'])
-	}
+	},
+	twitch_mirror: Object.assign({
+		enabled: false,
+		ingest: null
+	}, localconfig['twitch_mirror'])
 };
 export { config };

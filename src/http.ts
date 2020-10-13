@@ -238,10 +238,14 @@ async function initAPI() {
 			if(t) {
 				if(req.body.record === "true") req.body.record = true;
 				else if(req.body.record === "false") req.body.record = false;
+				if(req.body.twitch === "true") req.body.twitch = true;
+				else if(req.body.twitch === "false") req.body.twitch = false;
 				return api.update({name: t['username'],
 					title: "title" in req.body ? req.body.title : false,
 					bio: "bio" in req.body ? req.body.bio : false,
-					rec: "record" in req.body ? req.body.record : "NA"
+					rec: "record" in req.body ? req.body.record : "NA",
+					twitch: "twitch" in req.body ? req.body.twitch: "NA",
+					twitch_key: "twitch_key" in req.body ? req.body.twitch_key : false
 				}).then((r) => {
 					res.json(r);
 					return;
@@ -492,7 +496,9 @@ async function initSite(openReg) {
 		if(tryDecode(req.cookies.Authorization)) {
 			db.query('select * from user_meta where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((result) => {
 				db.query('select record_flag from users where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((r2) => {
-					res.render('profile.njk', Object.assign({rflag: r2[0]}, {meta: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+					db.query('select enabled from twitch_mirror where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((r3) => {
+						res.render('profile.njk', Object.assign({twitch: r3[0]}, {rflag: r2[0]}, {meta: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+					});
 				});
 			});
 			//res.render('profile.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));

@@ -68,6 +68,15 @@ function init () {
 					console.log('[NodeMediaServer] Skipping recording for stream:',id);
 				}
 				db.query('update user_meta set live=true where username=\''+results[0].username+'\' limit 1');
+				db.query('SELECT twitch_key,enabled from twitch_mirror where username='+db.raw.escape(results[0].username)+' limit 1').then(async (tm) => {
+					if(!tm[0]['enabled'] || !config['twitch_mirror']['enabled'] || !config['twitch_mirror']['ingest']) return;
+					console.log('[NodeMediaServer] Mirroring to twitch for stream:',id)
+					execFile(config['media']['ffmpeg'], ['-loglevel', 'fatal', '-i', 'rtmp://127.0.0.1:'+config['rtmp']['port']+'/'+config['media']['privateEndpoint']+'/'+key, '-vcodec', 'copy', '-acodec', 'copy', '-f', 'flv', config['twitch_mirror']['ingest']+tm[0]['twitch_key']], {
+						detached: true,
+						stdio : 'inherit',
+						maxBuffer: Infinity
+					}).unref();
+				});
 				console.log('[NodeMediaServer] Stream key ok for stream:',id);
 			}
 			else{

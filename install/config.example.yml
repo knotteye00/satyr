@@ -57,3 +57,11 @@ chat:
     username:
     #https://twitchapps.com/tmi/
     password:
+
+twitch_mirror:
+# enable to allow users to mirror video streams to twitch
+# for those with truly no bandwidth limits
+  enabled: false
+  # https://stream.twitch.tv/ingests/
+  # do not include {stream_key}
+  ingest: 'rtmp://live-ord02.twitch.tv/app/

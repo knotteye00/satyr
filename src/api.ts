@@ -18,7 +18,7 @@ async function register(name: string, password: string, confirm: string): Promis
 }
 
 async function update(fields: object): Promise<object>{
-	if(!fields['title'] && !fields['bio'] && (fields['rec'] !== 'true' && fields['rec'] !== 'false')) return {"error":"no valid fields specified"};
+	if(!fields['title'] && !fields['bio'] && (fields['rec'] !== 'true' && fields['rec'] !== 'false') && (fields['twitch'] !== 'true' && fields['twitch'] !== 'false') && !fields['twitch_key']) return {"error":"no valid fields specified"};
 	let qs: string = "";
 	let f: boolean = false;
 	if(fields['title']) {qs += ' user_meta.title='+db.raw.escape(fields['title']);f = true;}
@@ -30,8 +30,19 @@ async function update(fields: object): Promise<object>{
 	if(typeof(fields['rec']) === 'boolean' || typeof(fields['rec']) === 'number') {
 		if(f) qs+=',';
 		qs += ' users.record_flag='+db.raw.escape(fields['rec']);
+		f=true;
 	}
-	await db.query('UPDATE users,user_meta SET'+qs+' WHERE users.username='+db.raw.escape(fields['name'])+' AND user_meta.username='+db.raw.escape(fields['name']));
+	if(typeof(fields['twitch']) === 'boolean' || typeof(fields['twitch']) === 'number') {
+		if(f) qs+=',';
+		qs += ' twitch_mirror.enabled='+db.raw.escape(fields['twitch']);
+		f=true;
+	}
+	if(fields['twitch_key']){
+		if(f) qs+=',';
+		qs += ' twitch_mirror.twitch_key='+db.raw.escape(fields['twitch_key']);
+		f = true;
+	}
+	await db.query('UPDATE users,user_meta,twitch_mirror SET'+qs+' WHERE users.username='+db.raw.escape(fields['name'])+' AND user_meta.username='+db.raw.escape(fields['name'])+' AND twitch_mirror.username='+db.raw.escape(fields['name']));
 	return {success:""};
 }
 
