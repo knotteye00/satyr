@@ -3,8 +3,8 @@ import * as base64id from "base64id";
 import { config } from "./config";
 import {unlink} from "fs";
 
-async function register(name: string, password: string, confirm: string): Promise<object> {
-	if(!config['satyr']['registration']) return {"error":"registration disabled"};
+async function register(name: string, password: string, confirm: string, invite?: boolean): Promise<object> {
+	if(!config['satyr']['registration'] && !invite) return {"error":"registration disabled"};
 	if(name.includes(';') || name.includes(' ') || name.includes('\'')) return {"error":"illegal characters"};
 	if(password !== confirm) return {"error":"mismatched passwords"};
 	for(let i=0;i<config['satyr']['restrictedNames'].length;i++){
@@ -104,12 +104,15 @@ async function genInvite(): Promise<string>{
 	return invitecode;
 }
 
-async function useInvite(code: string): Promise<boolean>{
+async function validInvite(code: string): Promise<boolean>{
 	if(typeof(code) !== "string" || code === "") return false;
 	var result = await db.query('SELECT code FROM invites WHERE code='+db.raw.escape(code));
 	if(!result[0] || result[0]['code'] !== code) return false;
-	await db.query('DELETE FROM invites WHERE code='+db.raw.escape(code));
 	return true;
 }
 
-export { register, update, changepwd, changesk, login, updateChat, deleteVODs, getConfig, genInvite, useInvite };
+async function useInvite(code: string): Promise<void>{
+	if(validInvite(code)) await db.query('DELETE FROM invites WHERE code='+db.raw.escape(code));
+}
+
+export { register, update, changepwd, changesk, login, updateChat, deleteVODs, getConfig, genInvite, useInvite, validInvite };

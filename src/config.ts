@@ -16,7 +16,7 @@ const config: Object = {
 	   domain: '',
 	   registration: false,
 	   email: null,
-	   restrictedNames: [ 'live', 'user', 'users', 'register', 'login' ],
+	   restrictedNames: [ 'live', 'user', 'users', 'register', 'login', 'invite' ],
 	   rootredirect: '/users/live',
 	   version: process.env.npm_package_version,
 	 }, localconfig['satyr']),
