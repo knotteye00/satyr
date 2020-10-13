@@ -225,18 +225,20 @@ async function initAPI() {
 	});
 	app.post('/api/register', (req, res) => {
 		if("invite" in req.body){
-			if(api.validInvite(req.body.invite)){
-				api.register(req.body.username, req.body.password, req.body.confirm, true).then((result) => {
-					if(result[0]) return genToken(req.body.username).then((t) => {
-						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
+			api.validInvite(req.body.invite).then((v) => {
+				if(v){
+					api.register(req.body.username, req.body.password, req.body.confirm, true).then((result) => {
+						if(result[0]) return genToken(req.body.username).then((t) => {
+							res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
+							res.json(result);
+							api.useInvite(req.body.invite);
+							return;
+						});
 						res.json(result);
-						api.useInvite(req.body.invite);
-						return;
 					});
-					res.json(result);
-				});
-			}
-			else res.json({error: "invalid invite code"});
+				}
+				else res.json({error: "invalid invite code"});
+			});	
 		}
 		else
 		api.register(req.body.username, req.body.password, req.body.confirm).then( (result) => {
