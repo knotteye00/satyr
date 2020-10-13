@@ -507,12 +507,6 @@ async function initSite(openReg) {
 		}
 		else res.render('invite.njk',Object.assign({icode: req.params.code}, njkconf));
 	});
-	app.get('/invite', (req, res) => {
-		if(tryDecode(req.cookies.Authorization)) {
-			res.redirect('/profile');
-		}
-		else res.render('invite.njk',Object.assign({icode: ""}, njkconf));
-	});
 	app.get('/register', (req, res) => {
 		if(tryDecode(req.cookies.Authorization) || !openReg) {
 			res.redirect(njkconf.rootredirect);
