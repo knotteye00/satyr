@@ -75,6 +75,15 @@ async function init(){
 }
 
 async function initFE(){
+	app.get('/', (req, res) => {
+		res.redirect(config['satyr']['rootredirect']);
+	});
+	app.get('/nunjucks-slim.js', (req, res) => {
+		res.sendFile(process.cwd()+'/node_modules/nunjucks/browser/nunjucks-slim.js');
+	});
+	app.get('/chat', (req, res) => {
+		res.sendFile(process.cwd()+'/templates/chat.html');
+	});
 	app.get('*', (req, res) => {
 		res.sendFile(process.cwd()+'/'+config['http']['directory']+'/index.html');
 	});
@@ -368,6 +377,7 @@ async function initAPI() {
 		if(req.cookies.Authorization) validToken(req.cookies.Authorization).then((t) => {
 			if(t) {
 				if(t['exp'] - 86400 < Math.floor(Date.now() / 1000)){
+					res.cookie('X-Auth-As', t['username'], {maxAge: 604800000, httpOnly: false, sameSite: 'Lax'});
 					return genToken(t['username']).then((t) => {
 						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
 						res.json({success:""});
@@ -389,6 +399,7 @@ async function initAPI() {
 				if(!result){
 					genToken(req.body.username).then((t) => {
 						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
+						res.cookie('X-Auth-As', req.body.username, {maxAge: 604800000, httpOnly: false, sameSite: 'Lax'});
 						res.json({success:""});
 					})
 				}

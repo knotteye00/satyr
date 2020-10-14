@@ -1,37 +1,23 @@
 <!DOCTYPE html>
 <head>
+	<link rel="stylesheet" type="text/css" href="/styles.css">
+	<link rel="stylesheet" type="text/css" href="/local.css">
+	<link rel="icon" type="image/svg" href="/logo.svg">
 	<script src="/nunjucks-slim.js"></script>
 	<script src="/templates.js"></script>
 	<script>
 		nunjucks.configure({ autoescape: true });
 	</script>
+	<script>
+		//should check for and refresh login tokens on pageload..
+		if(document.cookie.match(/^(.*;)?\s*X-Auth-As\s*=\s*[^;]+(.*)?$/) !== null) {
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", "/api/login", true);
+			xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+			xhr.send("");
+		}
+	</script>
 </head>
 <body onload="render()">
-  <script>
-	function render(){
-		switch(window.location.pathname){
-			case "/about.html":
-				document.body.innerHTML = nunjucks.render('about.html');
-				break;
-			case "/tos.html":
-				document.body.innerHTML = nunjucks.render('tos.html');
-				break;
-			default:
-				document.body.innerHTML = nunjucks.render('404.njk');
-		}
-	}
-	function getContext(){
-		var conf = {
-			sitename: "",
-			domain: "",
-			email: "",
-			version: "",
-			registration: false
-		}
-		var info = new XMLHttpRequest();
-		info.onload = () => {
-			if(xhr.status === 200)
-		}
-	}
-  </script>
+  <script src="/index.js"></script>
 </body>
