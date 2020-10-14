@@ -56,11 +56,12 @@ async function init(){
 	}
 	app.disable('x-powered-by');
 	//site handlers
-	await initSite(config['satyr']['registration']);
+	//await initSite(config['satyr']['registration']);
 	//api handlers
 	await initAPI();
 	//static files if nothing else matches first
 	app.use(express.static(config['http']['directory']));
+	await initFE();
 	//404 Handler
 	app.use(function (req, res, next) {
 		if(tryDecode(req.cookies.Authorization)) {
@@ -71,6 +72,12 @@ async function init(){
 	});
 	banlist = new dirty('./config/bans.db').on('load', () => {initChat()});
 	server.listen(config['http']['port']);
+}
+
+async function initFE(){
+	app.get('*', (req, res) => {
+		res.sendFile(process.cwd()+'/'+config['http']['directory']+'/index.html');
+	});
 }
 
 async function newNick(socket, skip?: boolean, i?: number) {

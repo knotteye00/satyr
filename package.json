@@ -9,7 +9,8 @@
 		"cli": "ts-node src/cli.ts",
 		"setup": "sh install/setup.sh",
 		"migrate": "ts-node src/migrate.ts",
-		"invite": "ts-node src/cli.ts --invite"
+		"invite": "ts-node src/cli.ts --invite",
+		"make-templates": "cp node_modules/nunjucks/browser/nunjucks-slim.js site &&nunjucks-precompile -i [\"\\.html$\",\"\\.njk$\"] templates > site/templates.js"
 	},
 	"repository": {
 		"type": "git",
