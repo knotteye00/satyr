@@ -1,5 +1,6 @@
 async function render(path){
 	var context = await getContext();
+	history.pushState({}, context.sitename, location.protocol+'//'+location.host+path);
 	switch(path){
 		//nothing but context
 		case (path.match(/^\/about\/?$/) || {}).input: 
@@ -104,6 +105,9 @@ async function render(path){
 		case "":
 			render('/users/live');
 			break;	
+		case "/index.html":
+			render('/users/live');
+			break;
 		//404
 		default:
 			document.body.innerHTML = nunjucks.render('404.njk', context);
