@@ -115,7 +115,7 @@ Obtain a signed json web token for authentication
 
 **Response**: If succesful, will return `{success: ""}` or `{success: "already verified"}` if the JWT provided is too early to be renewed. If unsuccesful, will return `{error: "invalid password"}` or `{error: "Username or Password Incorrect"}` depending on the authentication method. Note that if a JWT is available, the parameters will be ignored.
 
-**Notes**: I've already listed nearly every response. My final note is that the JWT is set as the cookie 'Authorization', not returned in the response.
+**Notes**: The returned JWT is set as the cookie httponly 'Authorization'. It will also return a non httponly cookie X-Auth-As with the username of the authenticated user.
 
 
 ## /api/user/update
