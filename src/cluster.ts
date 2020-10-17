@@ -8,6 +8,7 @@ import * as strf from "strftime";
 import * as ctx from '../node_modules/node-media-server/node_core_ctx';
 import * as db from "./database";
 import {config} from "./config";
+import * as isPortAvailable from "is-port-available";
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const { exec, execFile } = require('child_process');
@@ -64,11 +65,14 @@ if (cluster.isMaster) {
 		rtmp: Object.assign({port: 1936}, config['rtmp'])
 	};
 
+	//find a unique port to listen on
+	getPort().then((wPort) => {
+
 	// creating the rtmp server
 	var serv = net.createServer((socket) => {
 		let session = new NodeRtmpSession(rtmpcfg, socket);
 		session.run();
-	}).listen(1936);
+	}).listen(wPort);
 	logger.setLogType(0);
 
 	// RTMP Server Logic
@@ -99,7 +103,7 @@ if (cluster.isMaster) {
 				mkdir(config['http']['directory']+'/'+config['media']['publicEndpoint']+'/'+results[0].username, { recursive : true }, ()=>{;});
 				while(true){
 					if(session.audioCodec !== 0 && session.videoCodec !== 0){
-						transCommand(results[0].username, key).then((r) => {
+						transCommand(results[0].username, key, wPort).then((r) => {
 							execFile(config['media']['ffmpeg'], r, {maxBuffer: Infinity}, (err, stdout, stderr) => {
 								/*console.log(err);
 								console.log(stdout);
@@ -114,7 +118,7 @@ if (cluster.isMaster) {
 					console.log(`[RTMP Cluster WORKER ${process.pid}] Initiating recording for stream: ${id}`);
 					mkdir(config['http']['directory']+'/'+config['media']['publicEndpoint']+'/'+results[0].username, { recursive : true }, (err) => {
 						if (err) throw err;
-						execFile(config['media']['ffmpeg'], ['-loglevel', 'fatal', '-i', 'rtmp://127.0.0.1:'+config['rtmp']['port']+'/'+config['media']['privateEndpoint']+'/'+key, '-vcodec', 'copy', '-acodec', 'copy', config['http']['directory']+'/'+config['media']['publicEndpoint']+'/'+results[0].username+'/'+strf('%d%b%Y-%H%M')+'.mp4'], {
+						execFile(config['media']['ffmpeg'], ['-loglevel', 'fatal', '-i', 'rtmp://127.0.0.1:'+wPort+'/'+config['media']['privateEndpoint']+'/'+key, '-vcodec', 'copy', '-acodec', 'copy', config['http']['directory']+'/'+config['media']['publicEndpoint']+'/'+results[0].username+'/'+strf('%d%b%Y-%H%M')+'.mp4'], {
 							detached : true,
 							stdio : 'inherit',
 							maxBuffer: Infinity
@@ -130,7 +134,7 @@ if (cluster.isMaster) {
 				db.query('SELECT twitch_key,enabled from twitch_mirror where username='+db.raw.escape(results[0].username)+' limit 1').then(async (tm) => {
 					if(!tm[0]['enabled'] || !config['twitch_mirror']['enabled'] || !config['twitch_mirror']['ingest']) return;
 					console.log('[NodeMediaServer] Mirroring to twitch for stream:',id)
-					execFile(config['media']['ffmpeg'], ['-loglevel', 'fatal', '-i', 'rtmp://127.0.0.1:'+config['rtmp']['port']+'/'+config['media']['privateEndpoint']+'/'+key, '-vcodec', 'copy', '-acodec', 'copy', '-f', 'flv', config['twitch_mirror']['ingest']+tm[0]['twitch_key']], {
+					execFile(config['media']['ffmpeg'], ['-loglevel', 'fatal', '-i', 'rtmp://127.0.0.1:'+wPort+'/'+config['media']['privateEndpoint']+'/'+key, '-vcodec', 'copy', '-acodec', 'copy', '-f', 'flv', config['twitch_mirror']['ingest']+tm[0]['twitch_key']], {
 						detached: true,
 						stdio : 'inherit',
 						maxBuffer: Infinity
@@ -206,6 +210,8 @@ if (cluster.isMaster) {
 		}
 	});
 	console.log(`[RTMP Cluster WORKER ${process.pid}] Worker Ready.`);
+
+	});
 }
 
 function newRTMPListener(eventName, listener) {
@@ -216,10 +222,23 @@ function getRTMPSession(id) {
 	return ctx.sessions.get(id);
 }
 
-async function transCommand(user: string, key: string): Promise<string[]>{
+async function getPort(): Promise<number>{
+	let port = 1936+process.pid;
+	while(true){
+		let i=0;
+		if(await isPortAvailable(port+i)){
+			port += i;
+			break;
+		}
+		i++;
+	}
+	return port;
+}
+
+async function transCommand(user: string, key: string, wPort): Promise<string[]>{
 	let args: string[] = ['-loglevel', 'fatal', '-y'];
 	if(config['transcode']['inputflags'] !== null && config['transcode']['inputflags'] !== "") args = args.concat(config['transcode']['inputflags'].split(" "));
-	args = args.concat(['-i', 'rtmp://127.0.0.1:'+config['rtmp']['port']+'/'+config['media']['privateEndpoint']+'/'+key, '-movflags', '+faststart']);
+	args = args.concat(['-i', 'rtmp://127.0.0.1:'+wPort+'/'+config['media']['privateEndpoint']+'/'+key, '-movflags', '+faststart']);
 	if(config['transcode']['adaptive']===true && config['transcode']['variants'] > 1) {
 		for(let i=0;i<config['transcode']['variants'];i++){
 			args = args.concat(['-map', '0:2']);
