@@ -36,7 +36,10 @@ const config: Object = {
 	  ping: 30,
 	  ping_timeout: 60 }, localconfig['rtmp']),
 	http: Object.assign({ 
-		hsts: false, directory: './site', port: 8000 
+		hsts: false, 
+		directory: './site', 
+		port: 8000,
+		server_side_render: true
 	}, localconfig['http']),
 	media: Object.assign({
 	   record: false,

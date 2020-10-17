@@ -1,6 +1,6 @@
 {
 	"name": "satyr",
-	"version": "0.9.4",
+	"version": "0.10.0",
 	"description": "A livestreaming server.",
 	"license": "AGPL-3.0",
 	"author": "knotteye",
@@ -9,7 +9,8 @@
 		"cli": "ts-node src/cli.ts",
 		"setup": "sh install/setup.sh",
 		"migrate": "ts-node src/migrate.ts",
-		"invite": "ts-node src/cli.ts --invite"
+		"invite": "ts-node src/cli.ts --invite",
+		"make-templates": "nunjucks-precompile -i [\"\\.html$\",\"\\.njk$\"] templates > site/templates.js"
 	},
 	"repository": {
 		"type": "git",

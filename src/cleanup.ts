@@ -1,8 +1,9 @@
 import * as db from "./database";
 import {readdirSync} from "fs";
+import { execSync } from "child_process";
 
-async function init(m?: boolean) {
-	if(!m){
+async function init() {
+	if(process.argv.indexOf('--skip-migrate') === -1){
 		console.log('Checking database version.');
 		var tmp: string[] = await db.query('show tables like \"db_meta\"');
 		if(tmp.length === 0){
@@ -17,6 +18,15 @@ async function init(m?: boolean) {
 	else {
 		console.log('Skipping database version check.');
 	}
+
+	if(!require('./config').config['http']['server_side_render'] && process.argv.indexOf('--skip-compile') === -1) {
+		console.log("Compiling templates for client-side frontend.");
+		execSync(process.cwd()+'/node_modules/.bin/nunjucks-precompile  -i [\"\\.html$\",\"\\.njk$\"] templates > site/templates.js');
+	}
+	else if(!require('./config').config['http']['server_side_render']){
+		console.log("Skipped compiling templates for client-side frontend.");
+	}
+
     //If satyr is restarted in the middle of a stream
     //it causes problems
     //Live flags in the database stay live

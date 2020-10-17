@@ -87,9 +87,11 @@ async function getConfig(username: string, all?: boolean): Promise<object>{
 		let users = await db.query('SELECT stream_key,record_flag FROM users WHERE username='+db.raw.escape(username));
 		if(users[0]) Object.assign(t, users[0]);
 		let usermeta = await db.query('SELECT title,about FROM user_meta WHERE username='+db.raw.escape(username));
-		if(usermeta[0]) Object.assign(t, users[0]);
+		if(usermeta[0]) Object.assign(t, usermeta[0]);
 		let ci = await db.query('SELECT irc,xmpp,twitch,discord FROM chat_integration WHERE username='+db.raw.escape(username));
 		if(ci[0]) Object.assign(t, ci[0]);
+		let tw = await db.query('SELECT enabled,twitch_key FROM twitch_mirror WHERE username='+db.raw.escape(username));
+		if(tw[0]) t['twitch_mirror'] = Object.assign({}, tw[0]);
 	}
 	else {
 		let um = await db.query('SELECT title,about FROM user_meta WHERE username='+db.raw.escape(username));
