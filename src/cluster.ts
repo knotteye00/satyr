@@ -8,9 +8,6 @@ import * as strf from "strftime";
 import * as ctx from '../node_modules/node-media-server/node_core_ctx';
 import * as db from "./database";
 import {config} from "./config";
-import { messageRateLimitPresets } from 'dank-twitch-irc';
-
-const {readValue, writeValue} = require('@mediafish/amf0');
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 const { exec, execFile } = require('child_process');
@@ -51,15 +48,6 @@ if (cluster.isMaster) {
 	var server = net.createServer({ pauseOnConnect: true }, function(connection) {
 		if(nextWorker >= workers.length) nextWorker = 0;
 		var worker = workers[nextWorker];
-		/*connection.on('data', (chunk) => {
-			const buff = Buffer.from(chunk);
-			let offset, value, array = [];
-			while(true) {
-  				[offset, value] = readValue(buff, offset);
-				console.log(JSON.stringify(value, null, 4));
-				array.push(value);
-			}
-		});*/
 		worker.send('rtmp-session:connection', connection); //send connection to worker
 	}).listen(config['rtmp']['port']);
 
