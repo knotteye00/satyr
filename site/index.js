@@ -1,36 +1,44 @@
-async function render(){
+async function render(path){
 	var context = await getContext();
-	switch(window.location.pathname){
+	switch(path){
 		//nothing but context
-		case (window.location.pathname.match(/^\/about\/?$/) || {}).input: 
+		case (path.match(/^\/about\/?$/) || {}).input: 
 			document.body.innerHTML = nunjucks.render('about.njk', context);
+			modifyLinks();
 			break;
-		case (window.location.pathname.match(/^\/login\/?$/) || {}).input:
+		case (path.match(/^\/login\/?$/) || {}).input:
 			document.body.innerHTML = nunjucks.render('login.njk', context);
+			modifyLinks();
 			break;
-		case (window.location.pathname.match(/^\/register\/?$/) || {}).input:
+		case (path.match(/^\/register\/?$/) || {}).input:
 			if(!context.registration) window.location = '/';
 			document.body.innerHTML = nunjucks.render('registration.njk', context);
+			modifyLinks();
 			break;
-		case (window.location.pathname.match(/^\/changepwd\/?$/) || {}).input:
+		case (path.match(/^\/changepwd\/?$/) || {}).input:
 			document.body.innerHTML = nunjucks.render('changepwd.njk', context);
+			modifyLinks();
 			break;
-		case (window.location.pathname.match(/^\/chat\/?$/) || {}).input:
+		case (path.match(/^\/chat\/?$/) || {}).input:
 			document.body.innerHTML = nunjucks.render('chat.html', context);
+			modifyLinks();
 			break;
-		case (window.location.pathname.match(/^\/help\/?$/) || {}).input:
+		case (path.match(/^\/help\/?$/) || {}).input:
 			document.body.innerHTML = nunjucks.render('help.njk', context);
+			modifyLinks();
 			break;
 		//need to hit the API
-		case (window.location.pathname.match(/^\/users\/live\/?$/) || {}).input:
+		case (path.match(/^\/users\/live\/?$/) || {}).input:
 			var list = JSON.parse(await makeRequest("POST", "/api/users/live", JSON.stringify({num: 50})));
 			document.body.innerHTML = nunjucks.render('live.njk', Object.assign({list: list.users}, context));
+			modifyLinks();
 			break;
-		case (window.location.pathname.match(/^\/users\/?$/) || {}).input:
+		case (path.match(/^\/users\/?$/) || {}).input:
 			var list = JSON.parse(await makeRequest("POST", "/api/users/all", JSON.stringify({num: 50})));
 			document.body.innerHTML = nunjucks.render('list.njk', Object.assign({list: list.users}, context));
+			modifyLinks();
 			break;
-		case (window.location.pathname.match(/^\/profile\/chat\/?$/) || {}).input:
+		case (path.match(/^\/profile\/chat\/?$/) || {}).input:
 			if(!context.auth.name) window.location = '/login';
 			var config = JSON.parse(await makeRequest("GET", '/api/'+context.auth.name+'/config'));
 			config = {
@@ -42,8 +50,9 @@ async function render(){
 				}
 			};
 			document.body.innerHTML = nunjucks.render('chat_integ.njk', Object.assign(config, context));
+			modifyLinks();
 			break;
-		case (window.location.pathname.match(/^\/profile\/?$/) || {}).input:
+		case (path.match(/^\/profile\/?$/) || {}).input:
 			if(!context.auth.name) window.location = '/login';
 			var config = JSON.parse(await makeRequest("GET", '/api/'+context.auth.name+'/config'));
 			config = {
@@ -55,43 +64,49 @@ async function render(){
 				twitch: config.twitch_mirror
 			};
 			document.body.innerHTML = nunjucks.render('profile.njk', Object.assign(config, context));
+			modifyLinks();
 			break;
 		//parsing slugs
-		case (window.location.pathname.match(/^\/invite\//) || {}).input: // /invite/:code
-			document.body.innerHTML = nunjucks.render('invite.njk', Object.assign({icode: window.location.pathname.substring(8)}, context));
+		case (path.match(/^\/invite\//) || {}).input: // /invite/:code
+			document.body.innerHTML = nunjucks.render('invite.njk', Object.assign({icode: path.substring(8)}, context));
+			modifyLinks();
 			break;
 		//slugs and API
-		case (window.location.pathname.match(/^\/users\/.+\/?$/) || {}).input: // /users/:user
-			if(window.location.pathname.substring(window.location.pathname.length - 1).indexOf('/') !== -1)
-			var usr = window.location.pathname.substring(7, window.location.pathname.length - 1);
-			else var usr = window.location.pathname.substring(7);
+		case (path.match(/^\/users\/.+\/?$/) || {}).input: // /users/:user
+			if(path.substring(path.length - 1).indexOf('/') !== -1)
+			var usr = path.substring(7, path.length - 1);
+			else var usr = path.substring(7);
 			var config = JSON.parse(await makeRequest("GET", '/api/'+usr+'/config'));
 			if(!config.title){document.body.innerHTML = nunjucks.render('404.njk', context); break;}
 			document.body.innerHTML = nunjucks.render('user.njk', Object.assign({about: config.about, title: config.title, username: config.username}, context));
+			modifyLinks();
 			break;
-		case (window.location.pathname.match(/^\/vods\/.+\/manage\/?$/) || {}).input: // /vods/:user/manage
-			var usr = window.location.pathname.substring(6, (window.location.pathname.length - 7));
+		case (path.match(/^\/vods\/.+\/manage\/?$/) || {}).input: // /vods/:user/manage
+			var usr = path.substring(6, (path.length - 7));
 			if(context.auth.name !== usr) window.location = '/vods/'+usr;
 			var vods = JSON.parse(await makeRequest("GET", '/api/'+usr+'/vods'));
 			document.body.innerHTML = nunjucks.render('managevods.njk', Object.assign({user: usr, list: vods.vods.filter(fn => fn.name.endsWith('.mp4'))}, context));
+			modifyLinks();
 			break;
-		case (window.location.pathname.match(/^\/vods\/.+\/?$/) || {}).input: // /vods/:user
-			if(window.location.pathname.substring(window.location.pathname.length - 1).indexOf('/') !== -1)
-			var usr = window.location.pathname.substring(6, window.location.pathname.length - 1);
-			else var usr = window.location.pathname.substring(6);
+		case (path.match(/^\/vods\/.+\/?$/) || {}).input: // /vods/:user
+			if(path.substring(path.length - 1).indexOf('/') !== -1)
+			var usr = path.substring(6, path.length - 1);
+			else var usr = path.substring(6);
 			var vods = JSON.parse(await makeRequest("GET", '/api/'+usr+'/vods'));
 			document.body.innerHTML = nunjucks.render('vods.njk', Object.assign({user: usr, list: vods.vods.filter(fn => fn.name.endsWith('.mp4'))}, context));
+			modifyLinks();
 			break;
 		//root
 		case "/":
-			window.location = '/users/live';
+			render('/users/live');
 			break;
 		case "":
-			window.location = '/users/live';
+			render('/users/live');
 			break;	
 		//404
 		default:
 			document.body.innerHTML = nunjucks.render('404.njk', context);
+			modifyLinks();
 	}
 }
 
@@ -138,4 +153,18 @@ function parseCookie(c){
 function handleLoad() {
 	var r = JSON.parse(document.getElementById('responseFrame').contentDocument.documentElement.textContent).success
 	if (typeof(r) !== 'undefined') window.location.href = '/profile'
+}
+
+function modifyLinks() {
+	for (var ls = document.links, numLinks = ls.length, i=0; i<numLinks; i++){
+		if(ls[i].href.indexOf(location.protocol+'//'+location.host) !== -1) {
+			//should be a regular link
+			ls[i].setAttribute('onclick', 'return internalLink(\"'+ls[i].href.substring((location.protocol+'//'+location.host).length)+'\")');
+		}
+	}
+}
+
+function internalLink(path){
+	this.render(path);
+	return false;
 }
