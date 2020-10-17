@@ -76,7 +76,8 @@ const config: Object = {
 			server: null,
 			port: 5222,
 			jid: null,
-			password: null
+			password: null,
+			nickname: 'SatyrChat'
 		}, localconfig['chat']['xmpp']),
 
 		twitch: Object.assign({
