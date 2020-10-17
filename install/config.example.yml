@@ -51,10 +51,10 @@ chat:
 
   xmpp:
     enabled: false
-    server:
+    server: # 'example.com'
     port: 5222
-    nickname: 'SatyrChat'
-    username: 'SatyrChat'
+    jid: # 'satyrchat@example.com'
+    password: # 'verysecretexample'
 
   twitch:
     enabled: false
