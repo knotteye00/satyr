@@ -1,6 +1,7 @@
-async function render(path){
+async function render(path, s){
 	var context = await getContext();
-	history.pushState({}, context.sitename, location.protocol+'//'+location.host+path);
+	if(!s)
+		history.pushState({}, context.sitename, location.protocol+'//'+location.host+path);
 	switch(path){
 		//nothing but context
 		case (path.match(/^\/about\/?$/) || {}).input: 
@@ -114,6 +115,10 @@ async function render(path){
 			modifyLinks();
 	}
 }
+
+window.addEventListener('popstate', (event) => {
+	render(document.location.pathname, true);
+});
 
 async function getContext(){
 	var info = JSON.parse(await makeRequest('GET', '/api/instance/info'));
