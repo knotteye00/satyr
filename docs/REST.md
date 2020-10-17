@@ -77,7 +77,9 @@ The array will be wrapped in a JSON object under the key 'users'.
 
 ## /api/users/all
 
-Same as above, but returns all users regardless of whether they are streaming. Also unfinished.
+Same as above, but returns all users regardless of whether they are streaming and if they're streaming or not.
+
+**Example**: `{users: [{username:"foo", title:"bar", live:1}] }`
 
 
 
@@ -89,7 +91,9 @@ Register a new user.
 
 **Authentication**: no
 
-**Parameters**: Username, password, confirm
+**Parameters**: Username, password, confirm, invite(optional)
+
+Invite is an optional invite code to bypass disabled registration.
 
 **Response**: If successful, returns a json object with the users stream key. Otherwise returns `{error: "error reason"}`
 
@@ -111,7 +115,7 @@ Obtain a signed json web token for authentication
 
 **Response**: If succesful, will return `{success: ""}` or `{success: "already verified"}` if the JWT provided is too early to be renewed. If unsuccesful, will return `{error: "invalid password"}` or `{error: "Username or Password Incorrect"}` depending on the authentication method. Note that if a JWT is available, the parameters will be ignored.
 
-**Notes**: I've already listed nearly every response. My final note is that the JWT is set as the cookie 'Authorization', not returned in the response.
+**Notes**: The returned JWT is set as the cookie httponly 'Authorization'. It will also return a non httponly cookie X-Auth-As with the username of the authenticated user.
 
 
 ## /api/user/update
@@ -122,9 +126,9 @@ Update the current user's information
 
 **Authentication**: yes
 
-**Parameters**: title, bio, rec
+**Parameters**: title, bio, rec, twitch, twitch_key
 
-Rec is a boolean (whether to record VODs), others are strings. Parameters that are not included in the request will not be updated.
+Rec is a boolean (whether to record VODs), twitch is a boolean (whether to mirror video streams to twitch) others are strings. Twitch_key is the stream key to use for twitch. Parameters that are not included in the request will not be updated.
 
 **Response**: Returns `{error: "error code"}` or `{success: ""}`
 

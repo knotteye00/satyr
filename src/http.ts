@@ -12,9 +12,6 @@ import * as chatInteg from "./chat";
 import { config } from "./config";
 import { readdir, readFileSync, writeFileSync } from "fs";
 import { JWT, JWK } from "jose";
-import { strict } from "assert";
-import { parse } from "path";
-import { isBuffer } from "util";
 
 const app = express();
 const server = http.createServer(app);
@@ -55,12 +52,16 @@ async function init(){
 		});
 	}
 	app.disable('x-powered-by');
-	//site handlers
+	//server-side site routes
+	if(config['http']['server_side_render'])
 	await initSite(config['satyr']['registration']);
-	//api handlers
+	//api routes
 	await initAPI();
-	//static files if nothing else matches first
+	//static files if nothing else matches
 	app.use(express.static(config['http']['directory']));
+	//client-side site routes
+	if(!config['http']['server_side_render'])
+	await initFE();
 	//404 Handler
 	app.use(function (req, res, next) {
 		if(tryDecode(req.cookies.Authorization)) {
@@ -71,6 +72,21 @@ async function init(){
 	});
 	banlist = new dirty('./config/bans.db').on('load', () => {initChat()});
 	server.listen(config['http']['port']);
+}
+
+async function initFE(){
+	app.get('/', (req, res) => {
+		res.redirect(config['satyr']['rootredirect']);
+	});
+	app.get('/nunjucks-slim.js', (req, res) => {
+		res.sendFile(process.cwd()+'/node_modules/nunjucks/browser/nunjucks-slim.js');
+	});
+	app.get('/chat', (req, res) => {
+		res.sendFile(process.cwd()+'/templates/chat.html');
+	});
+	app.get('*', (req, res) => {
+		res.sendFile(process.cwd()+'/'+config['http']['directory']+'/index.html');
+	});
 }
 
 async function newNick(socket, skip?: boolean, i?: number) {
@@ -156,7 +172,7 @@ async function initAPI() {
 				ping_timeout: config['rtmp']['ping_timeout']
 			},
 			media: {
-				vods: config['config']['media']['record'],
+				vods: config['media']['record'],
 				publicEndpoint: config['media']['publicEndpoint'],
 				privateEndpoint: config['media']['privateEndpoint'],
 				adaptive: config['transcode']['adaptive']
@@ -194,7 +210,7 @@ async function initAPI() {
 		});
 	});
 	app.post('/api/users/all', (req, res) => {
-		let qs = 'SELECT username,title FROM user_meta';
+		let qs = 'SELECT username,title,live FROM user_meta';
 
 		if(req.body.sort) {
 			switch (req.body.sort) {
@@ -224,6 +240,23 @@ async function initAPI() {
 		});
 	});
 	app.post('/api/register', (req, res) => {
+		if("invite" in req.body){
+			api.validInvite(req.body.invite).then((v) => {
+				if(v){
+					api.register(req.body.username, req.body.password, req.body.confirm, true).then((result) => {
+						if(result[0]) return genToken(req.body.username).then((t) => {
+							res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
+							res.json(result);
+							api.useInvite(req.body.invite);
+							return;
+						});
+						res.json(result);
+					});
+				}
+				else res.json({error: "invalid invite code"});
+			});	
+		}
+		else
 		api.register(req.body.username, req.body.password, req.body.confirm).then( (result) => {
 			if(result[0]) return genToken(req.body.username).then((t) => {
 				res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
@@ -238,10 +271,14 @@ async function initAPI() {
 			if(t) {
 				if(req.body.record === "true") req.body.record = true;
 				else if(req.body.record === "false") req.body.record = false;
+				if(req.body.twitch === "true") req.body.twitch = true;
+				else if(req.body.twitch === "false") req.body.twitch = false;
 				return api.update({name: t['username'],
 					title: "title" in req.body ? req.body.title : false,
 					bio: "bio" in req.body ? req.body.bio : false,
-					rec: "record" in req.body ? req.body.record : "NA"
+					rec: "record" in req.body ? req.body.record : "NA",
+					twitch: "twitch" in req.body ? req.body.twitch: "NA",
+					twitch_key: "twitch_key" in req.body ? req.body.twitch_key : false
 				}).then((r) => {
 					res.json(r);
 					return;
@@ -340,6 +377,7 @@ async function initAPI() {
 		if(req.cookies.Authorization) validToken(req.cookies.Authorization).then((t) => {
 			if(t) {
 				if(t['exp'] - 86400 < Math.floor(Date.now() / 1000)){
+					res.cookie('X-Auth-As', t['username'], {maxAge: 604800000, httpOnly: false, sameSite: 'Lax'});
 					return genToken(t['username']).then((t) => {
 						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
 						res.json({success:""});
@@ -361,6 +399,7 @@ async function initAPI() {
 				if(!result){
 					genToken(req.body.username).then((t) => {
 						res.cookie('Authorization', t, {maxAge: 604800000, httpOnly: true, sameSite: 'Lax'});
+						res.cookie('X-Auth-As', req.body.username, {maxAge: 604800000, httpOnly: false, sameSite: 'Lax'});
 						res.json({success:""});
 					})
 				}
@@ -482,6 +521,12 @@ async function initSite(openReg) {
 		}
 		else res.render('login.njk',njkconf);
 	});
+	app.get('/invite/:code', (req, res) => {
+		if(tryDecode(req.cookies.Authorization)) {
+			res.redirect('/profile');
+		}
+		else res.render('invite.njk',Object.assign({icode: req.params.code}, njkconf));
+	});
 	app.get('/register', (req, res) => {
 		if(tryDecode(req.cookies.Authorization) || !openReg) {
 			res.redirect(njkconf.rootredirect);
@@ -492,7 +537,9 @@ async function initSite(openReg) {
 		if(tryDecode(req.cookies.Authorization)) {
 			db.query('select * from user_meta where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((result) => {
 				db.query('select record_flag from users where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((r2) => {
-					res.render('profile.njk', Object.assign({rflag: r2[0]}, {meta: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+					db.query('select enabled from twitch_mirror where username='+db.raw.escape(JWT.decode(req.cookies.Authorization)['username'])).then((r3) => {
+						res.render('profile.njk', Object.assign({twitch: r3[0]}, {rflag: r2[0]}, {meta: result[0]}, {auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));
+					});
 				});
 			});
 			//res.render('profile.njk', Object.assign({auth: {is: true, name: JWT.decode(req.cookies.Authorization)['username']}}, njkconf));

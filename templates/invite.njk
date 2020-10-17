@@ -1,0 +1,20 @@
+{% extends "base.njk" %}
+{% block content %}
+<h3>You've been invited to {{ sitename }}</h3><span style="font-size: small;">Already registered? Log in <a href="/login">here</a>.</br></br></span>
+	<!--<div id="jscontainer" style="height: 100%;">
+		<div id="jschild" style="width: 50%;height: 100%;text-align: left;margin: 20px;">-->
+			<form action="/api/register" method="POST" target="responseFrame">
+				Username: </br><input type="text" name="username" style="min-width: 300px" placeholder="e.g. lain"/></br>
+        		Password: </br><input type="password" name="password" style="min-width: 300px"/></br>
+				Confirm: </br><input type="password" name="confirm" style="min-width: 300px"/></br></br>
+				<input type="hidden" name="invite" style="min-width: 300px" value="{{icode}}"/>
+				<input type="submit" value="Submit">
+			</form></br>
+			
+		<!--</div>
+		<div id="jschild" style="width: 50%;height: 100%;text-align: left;margin: 20px;">-->
+			{% include "tos.html" %}</br>
+			<iframe name="responseFrame" border="0" frameborder="0" style="display: inline;"></iframe>
+		<!--</div>
+	</div>-->
+{% endblock %}

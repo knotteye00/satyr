@@ -2,6 +2,7 @@ import {parseAsYaml as parse} from "parse-yaml";
 import {readFileSync as read} from "fs";
 try {
 	var localconfig: Object = parse(read('config/config.yml'));
+	console.log('Config file found.');
 } catch (e) {
 	console.log('No config file found. Exiting.');
 	process.exit();
@@ -15,7 +16,7 @@ const config: Object = {
 	   domain: '',
 	   registration: false,
 	   email: null,
-	   restrictedNames: [ 'live', 'user', 'users', 'register', 'login' ],
+	   restrictedNames: [ 'live', 'user', 'users', 'register', 'login', 'invite' ],
 	   rootredirect: '/users/live',
 	   version: process.env.npm_package_version,
 	 }, localconfig['satyr']),
@@ -35,7 +36,10 @@ const config: Object = {
 	  ping: 30,
 	  ping_timeout: 60 }, localconfig['rtmp']),
 	http: Object.assign({ 
-		hsts: false, directory: './site', port: 8000 
+		hsts: false, 
+		directory: './site', 
+		port: 8000,
+		server_side_render: true
 	}, localconfig['http']),
 	media: Object.assign({
 	   record: false,
@@ -80,6 +84,10 @@ const config: Object = {
 			username: null,
 			token: null
 		}, localconfig['chat']['twitch'])
-	}
+	},
+	twitch_mirror: Object.assign({
+		enabled: false,
+		ingest: null
+	}, localconfig['twitch_mirror'])
 };
 export { config };

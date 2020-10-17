@@ -5,7 +5,9 @@
 	<form action="/api/user/update" method="POST" target="responseFrame" id="profile">
 		Stream Title: </br><textarea form="profile" name="title" style="min-width: 320px;resize: none;font-size: large;text-align: center;" value="{{meta.title}}">{{meta.title}}</textarea></br>
 		Bio: </br><textarea form="profile" name="bio" style="min-width: 320px; min-height: 150px;resize: none;font-size: inherit;" value="{{meta.about}}">{{meta.about}}</textarea></br>
-		Record VODs: <input type="radio" name="record" value="true" {% if rflag.record_flag %}checked{% endif %}> Yes<input type="radio" name="record" value="false" {% if rflag.record_flag %}{% else %}checked{% endif %}/> No</br></br>
+		ReStream to Twitch: <input type="radio" name="twitch" value="true" {% if twitch.enabled %}checked{% endif %}> Yes<input type="radio" name="twitch" value="false" {% if twitch.enabled %}{% else %}checked{% endif %}/> No</br>
+		Record VODs: <input type="radio" name="record" value="true" {% if rflag.record_flag %}checked{% endif %}> Yes<input type="radio" name="record" value="false" {% if rflag.record_flag %}{% else %}checked{% endif %}/> No</br>
+		Twitch Key: <textarea form="profile" name="twitch_key" style="max-height: 18px;min-width: 238px;resize: none;font-size: large;text-align: center;"></textarea></br></br>
 		<input type="submit" value="Update Profile">
 	</form></br>
 	<form action="/api/user/streamkey" method="POST" target="responseFrame">

@@ -9,6 +9,14 @@ var cryptoconfig: Object;
 function init (){
 	raw = mysql.createPool(config['database']);
 	cryptoconfig = config['crypto'];
+	console.log('Connected to database.');
+}
+
+function initRTMPCluster(){
+	let cfg = config['database'];
+	cfg['connectionLimit'] = Math.floor(config['database']['connectionLimit'] / require('os').cpus().length);
+	raw = mysql.createPool(cfg);
+	cryptoconfig = config['crypto'];
 }
 
 async function addUser(name: string, password: string){
@@ -21,6 +29,7 @@ async function addUser(name: string, password: string){
 	await query('INSERT INTO users (username, password_hash, stream_key, record_flag) VALUES ('+raw.escape(name)+', '+raw.escape(hash)+', '+raw.escape(key)+', 0)');
 	await query('INSERT INTO user_meta (username, title, about, live) VALUES ('+raw.escape(name)+',\'\',\'\',false)');
 	await query('INSERT INTO chat_integration (username, irc, xmpp, twitch, discord) VALUES ('+raw.escape(name)+',\'\',\'\',\'\',\'\')');
+	await query('INSERT INTO twitch_mirror (username) VALUES ('+raw.escape(name)+')');
 	return true;
 }
 
@@ -29,6 +38,8 @@ async function rmUser(name: string){
 	if(!exist[0]) return false;
 	await query('delete from users where username='+raw.escape(name)+' limit 1');
 	await query('delete from user_meta where username='+raw.escape(name)+' limit 1');
+	await query('delete from chat_integration where username='+raw.escape(name)+' limit 1');
+	await query('delete from twitch_mirror where username='+raw.escape(name)+' limit 1');
 	return true;
 }
 
@@ -59,4 +70,4 @@ async function hash(pwd){
 	return await bcrypt.hash(pwd, cryptoconfig['saltRounds']);
 }
 
-export { query, raw, init, addUser, rmUser, validatePassword, hash, genKey };
+export { query, raw, init, addUser, rmUser, validatePassword, hash, genKey, initRTMPCluster };
