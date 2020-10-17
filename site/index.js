@@ -80,6 +80,7 @@ async function render(path){
 			if(!config.title){document.body.innerHTML = nunjucks.render('404.njk', context); break;}
 			document.body.innerHTML = nunjucks.render('user.njk', Object.assign({about: config.about, title: config.title, username: config.username}, context));
 			modifyLinks();
+			startVideo();
 			break;
 		case (path.match(/^\/vods\/.+\/manage\/?$/) || {}).input: // /vods/:user/manage
 			var usr = path.substring(6, (path.length - 7));
@@ -167,4 +168,43 @@ function modifyLinks() {
 function internalLink(path){
 	this.render(path);
 	return false;
+}
+
+//start dash.js
+async function startVideo(){
+	//var url = "/live/{{username}}/index.mpd";
+  	//var player = dashjs.MediaPlayer().create();
+  	//player.initialize(document.querySelector("#videoPlayer"), url, true);
+  	//console.log('called startvideo');
+  	while(true){
+		if(document.querySelector('#videoPlayer') === null)
+			break;
+
+	    if(window.location.pathname.substring(window.location.pathname.length - 1) !== '/'){
+			var url = "/api/"+window.location.pathname.substring(7)+"/config";
+			console.log(url)
+			var xhr = JSON.parse(await makeRequest("GET", url));
+			if(xhr.live){
+				var player = dashjs.MediaPlayer().create();
+				player.initialize(document.querySelector("#videoPlayer"), url, true);
+				break;
+			}
+		}
+
+		else{
+			var url = "/api/"+window.location.pathname.substring(7, window.location.pathname.length - 1)+"/config";
+			console.log(url)
+			var xhr = JSON.parse(await makeRequest("GET", url));
+			if(xhr.live){
+				var player = dashjs.MediaPlayer().create();
+				player.initialize(document.querySelector("#videoPlayer"), url, true);
+				break;
+			}
+		}
+		await sleep(60000);
+	}
+}
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
