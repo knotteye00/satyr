@@ -9,6 +9,9 @@ media:
   ffmpeg: '<ffmpeg>'
 
 rtmp:
+  # enable cluster mode this will pretty much entirely
+  #  break the ability to play rtmp for clients
+  cluster: false
   port: 1935
 
 http:
