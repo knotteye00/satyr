@@ -15,11 +15,13 @@ Follow the instructions after setup runs.
 ```bash
 npm run start
 ```
-You can also run this to skip checking the database version on startup.
+You can also skip checking the database version and compiling templates (if you don't use server-side rendering) on startup.
 ```bash
-npm run start -- --skip-migrate
+npm run start -- --skip-migrate --skip-compile
 # don't forget to migrate manually when you update
 npm run migrate
+# and compile templates after any changes
+npm run make-templates
 ```
 
 ## Contributing

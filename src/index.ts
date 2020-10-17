@@ -7,7 +7,7 @@ import { config } from "./config";
 
 async function run() {
 	await initDB();
-	await clean(process.argv.indexOf('--skip-migrate') !== -1);
+	await clean();
 	await initHTTP();
 	await initRTMP();
 	await initChat();
