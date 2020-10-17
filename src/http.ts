@@ -12,9 +12,6 @@ import * as chatInteg from "./chat";
 import { config } from "./config";
 import { readdir, readFileSync, writeFileSync } from "fs";
 import { JWT, JWK } from "jose";
-import { strict } from "assert";
-import { parse } from "path";
-import { isBuffer } from "util";
 
 const app = express();
 const server = http.createServer(app);
@@ -55,12 +52,15 @@ async function init(){
 		});
 	}
 	app.disable('x-powered-by');
-	//site handlers
-	//await initSite(config['satyr']['registration']);
-	//api handlers
+	//server-side site routes
+	if(config['http']['server_side_render'])
+	await initSite(config['satyr']['registration']);
+	//api routes
 	await initAPI();
-	//static files if nothing else matches first
+	//static files if nothing else matches
 	app.use(express.static(config['http']['directory']));
+	//client-side site routes
+	if(!config['http']['server_side_render'])
 	await initFE();
 	//404 Handler
 	app.use(function (req, res, next) {
