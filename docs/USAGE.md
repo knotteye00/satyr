@@ -3,28 +3,17 @@
 ### Administration
 Satyr needs access to port 1935 for RTMP streams, and will serve HTTP on port 8000. See CONFIGURATION.md for details on changing this.
 
-For HTTPS, run a reverse proxy in front of satyr. An example nginx block is shown below.
-```
-server {
-    port 80;
-    port [::]80;
-    server_name example.tld;
-    return https://$server_name$request_uri 301;
-}
-server {
-    port 443 ssl;
-    port [::]443 ssl;
-    server_name example.tld;
+For HTTPS, run a reverse proxy in front of satyr. An example nginx config can be found at install/satyr.nginx
+An example systemd service can also be at install/satyr.service
 
-    ssl_trusted_certificate   /etc/letsencrypt/live/example.tld/chain.pem;
-    ssl_certificate               /etc/letsencrypt/live/example.tld/fullchain.pem;
-    ssl_certificate_key        /etc/letsencrypt/live/example.tld/privkey.pem;
+#### CLI
+Satyr's CLI tool can be run with `npm run cli` or `node_modules/.bin/ts-node src/cli.ts`
 
-    location / {
-        proxy_pass http://127.0.0.1:8000/;
-    }
-}
-```
+It's not very complex. The following commands are available:
+* `npm run cli -- --adduser sally --password "hunter12"` to create user sally with the password hunter12
+* `npm run cli -- --rmuser sally` to remove user sally
+* `npm run cli -- --invite` to generate an invite code used for creating account even when registration is closed
+
 
 ### Users
 
@@ -35,13 +24,14 @@ Stream keys can be changed at example.tld/changesk, and passwords at /changepwd
 #### Chat
 Chat is based on Socket.IO, and can be accessed through the webclient at /chat.
 Chatting and changing a nickname do not require authentication, but the usernames of streamers are reserved.
+
 The following commands are available:
-`/nick sally (password)` Password is only required if sally is a registered user.
-`/join sally` Join the chatroom for sally's stream and leave the previous room.
-`/kick bob` Available only in your own room if you are a streamer. Forcefully disconnect the user.
-`/ban bob (time)` Ban a user from your room. Bans are based on IP address. The optional time is in minutes. The default is 30.
-`/banlist` List the IPs currently banned from your room.
-`/unban (ip)` self explanatory
+* `/nick sally (password)` Password is only required if sally is a registered user.
+* `/join sally` Join the chatroom for sally's stream and leave the previous room.
+* `/kick bob` Available only in your own room if you are a streamer. Forcefully disconnect the user.
+* `/ban bob (time)` Ban a user from your room. Bans are based on IP address. The optional time is in minutes. The default is 30.
+* `/banlist` List the IPs currently banned from your room.
+* `/unban (ip)` self explanatory
 
 You can set up mirroring to and from webchat rooms and IRC channels, twitch streams, and discord server channels.
 More information is in CONFIGURATION.md
