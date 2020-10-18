@@ -4,13 +4,13 @@
   <link rel="stylesheet" type="text/css" href="/videojs/video-js.min.css">-->
   <script src="/dashjs/dash.all.min.js"></script>
   <script>
-	  async function startVideo(){
+	async function startVideo(){
 	//var url = "/live/{{username}}/index.mpd";
   	//var player = dashjs.MediaPlayer().create();
   	//player.initialize(document.querySelector("#videoPlayer"), url, true);
   	//console.log('called startvideo');
   	while(true){
-		if(document.querySelector('#videoPlayer') === null)
+		if(!document.querySelector('#videoPlayer'))
 			break;
 
 	    if(window.location.pathname.substring(window.location.pathname.length - 1) !== '/'){

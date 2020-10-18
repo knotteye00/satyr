@@ -186,7 +186,7 @@ async function startVideo(){
   	//player.initialize(document.querySelector("#videoPlayer"), url, true);
   	//console.log('called startvideo');
   	while(true){
-		if(document.querySelector('#videoPlayer') === null)
+		if(!document.querySelector('#videoPlayer'))
 			break;
 
 	    if(window.location.pathname.substring(window.location.pathname.length - 1) !== '/'){
