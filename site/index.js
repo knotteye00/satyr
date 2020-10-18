@@ -82,7 +82,7 @@ async function render(path, s){
 			if(!config.title){document.body.innerHTML = nunjucks.render('404.njk', context); break;}
 			document.body.innerHTML = nunjucks.render('user.njk', Object.assign({about: config.about, title: config.title, username: config.username}, context));
 			modifyLinks();
-			startVideo();
+			initPlayer(usr);
 			break;
 		case (path.match(/^\/vods\/.+\/manage\/?$/) || {}).input: // /vods/:user/manage
 			var usr = path.substring(6, (path.length - 7));
@@ -179,41 +179,41 @@ function internalLink(path){
 	return false;
 }
 
-//start dash.js
-async function startVideo(){
-	//var url = "/live/{{username}}/index.mpd";
-  	//var player = dashjs.MediaPlayer().create();
-  	//player.initialize(document.querySelector("#videoPlayer"), url, true);
-  	//console.log('called startvideo');
-  	while(true){
-		if(!document.querySelector('#videoPlayer'))
-			break;
-
-	    if(window.location.pathname.substring(window.location.pathname.length - 1) !== '/'){
-			var url = "/api/"+window.location.pathname.substring(7)+"/config";
-			console.log(url)
-			var xhr = JSON.parse(await makeRequest("GET", url));
-			if(xhr.live){
-				var player = dashjs.MediaPlayer().create();
-				player.initialize(document.querySelector("#videoPlayer"), url, true);
-				break;
-			}
-		}
-
-		else{
-			var url = "/api/"+window.location.pathname.substring(7, window.location.pathname.length - 1)+"/config";
-			console.log(url)
-			var xhr = JSON.parse(await makeRequest("GET", url));
-			if(xhr.live){
-				var player = dashjs.MediaPlayer().create();
-				player.initialize(document.querySelector("#videoPlayer"), url, true);
-				break;
-			}
-		}
-		await sleep(60000);
-	}
-}
-
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+var shakaPolyFilled = false;
+async function initPlayer(usr) {
+  var manifestUri = document.location.protocol+'//'+document.location.host+'/live/'+usr+'/index.mpd';
+  if(!shakaPolyFilled){
+  	shaka.polyfill.installAll();
+  	shakaPolyFilled = true;
+  }
+  // Create a Player instance.
+  const video = document.getElementById('video');
+  const player = new shaka.Player(video);
+  // Listen for error events.
+  player.addEventListener('error', onErrorEvent);
+
+  // Try to load a manifest.
+  // This is an asynchronous process.
+  try {
+	await player.load(manifestUri);
+	// This runs if the asynchronous load is successful.
+    console.log('The video has now been loaded!');
+  } catch (e) {
+    // onError is executed if the asynchronous load fails.
+    onError(e);
+  }
+}
+
+function onErrorEvent(event) {
+  // Extract the shaka.util.Error object from the event.
+  onError(event.detail);
+}
+
+function onError(error) {
+  // Log the error.
+  console.error('Error code', error.code, 'object', error);
 }

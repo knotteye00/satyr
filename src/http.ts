@@ -59,6 +59,13 @@ async function init(){
 	await initAPI();
 	//static files if nothing else matches
 	app.use(express.static(config['http']['directory']));
+	//Fake static files
+	app.get('/shaka-player.compiled.js', (req, res) => {
+		res.sendFile(process.cwd()+'/node_modules/shaka-player/dist/shaka-player.compiled.js');
+	});
+	app.get('/shaka-player.compiled.map', (req, res) => {
+		res.sendFile(process.cwd()+'/node_modules/shaka-player/dist/shaka-player.compiled.map');
+	});
 	//client-side site routes
 	if(!config['http']['server_side_render'])
 	await initFE();

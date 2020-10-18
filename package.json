@@ -38,7 +38,8 @@
 		"socket.io": "^2.3.0",
 		"strftime": "^0.10.0",
 		"ts-node": "^8.5.4",
-		"typescript": "^3.6.3"
+		"typescript": "^3.6.3",
+		"shaka-player": "^3.0.5"
 	},
 	"devDependencies": {
 		"@types/node": "^12.12.67"
