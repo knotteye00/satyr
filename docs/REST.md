@@ -26,7 +26,7 @@ Configuration of the instance relating to media
 
 **Parameters**: none
 
-**Response**: JSON object containing the port and ping_timeout for RTMP, public and private play endpoints, and whether adaptive livestreaming and VOD recording are enabled.
+**Response**: JSON object containing the port and ping_timeout for RTMP, whether clustering is enabled, public and private play endpoints, and whether adaptive livestreaming and VOD recording are enabled.
 
 **Example**:
 ```
@@ -69,7 +69,7 @@ sort is the optional way to sort results. current options are "alphabet" and "al
 
 page is the page number (i.e. skip the first num * page results)
 
-**Response**: Returns an array of JSON objects containing the username and title of each stream. Returns an empty array if no one is streaming. Returns `{"error":"error code"}` in the event of an error. Will attempt to correct malformed requests to default values.
+**Response**: Returns an array of JSON objects containing the username and title of each stream. Returns an empty array if no one is streaming. Returns `{"error":"error reason"}` in the event of an error. Will attempt to correct malformed requests to default values.
 
 The array will be wrapped in a JSON object under the key 'users'.
 
@@ -78,7 +78,7 @@ The array will be wrapped in a JSON object under the key 'users'.
 
 ## /api/users/all
 
-Same as above, but returns all users regardless of whether they are streaming and if they're streaming or not.
+Same as above, but returns all users regardless of whether they are streaming and if they're streaming or not. Also returns a value 'live' indicating whether a user is currently streaming.
 
 **Example**: `{users: [{username:"foo", title:"bar", live:1}] }`
 
@@ -131,7 +131,7 @@ Update the current user's information
 
 Rec is a boolean (whether to record VODs), twitch is a boolean (whether to mirror video streams to twitch) others are strings. Twitch_key is the stream key to use for twitch. Parameters that are not included in the request will not be updated.
 
-**Response**: Returns `{error: "error code"}` or `{success: ""}`
+**Response**: Returns `{error: "error reason"}` or `{success: ""}`
 
 
 
@@ -145,9 +145,9 @@ Update the chatrooms on other platforms to integrate with the user's stream chat
 
 **Parameters**: discord, xmpp, twitch irc
 
-Strings corresponding to a channel name to mirror to. XMPP is currently unused. Parameters not included in the request will not be updated.
+Strings corresponding to a channel name to mirror to. Parameters not included in the request will not be updated.
 
-**Response**: Returns `{error: "error code"}` or `{success: ""}`
+**Response**: Returns `{error: "error reason"}` or `{success: ""}`
 
 
 
@@ -159,9 +159,9 @@ Delete the specified vods of the current user
 
 **Authentication**: yes
 
-**Paramters**: A string array of the names of vods to be deleted. (Do not include the file extension);
+**Paramters**: A string array of the names of vods to be deleted. (Do not include the file extension)
 
-**Response**: Returns `{error: "error code"}` or `{success: ""}`
+**Response**: Returns `{error: "error reason"}` or `{success: ""}`
 
 ## /api/user/password
 
@@ -173,7 +173,7 @@ Change the current user's password
 
 **Parameters**: The user's current password, the new password, AND a valid JWT cookie.
 
-**Response**: Returns `{error: "error code"}` or `{success: ""}`
+**Response**: Returns `{error: "error reason"}` or `{success: ""}`
 
 
 
@@ -187,7 +187,7 @@ Change the current user's stream key. This will not affect the stream if the use
 
 **Parameters**: A valid JWT cookie. No other parameters.
 
-**Response**: Returns `{error: "error code"}` or `{success: "new_stream_key"}`
+**Response**: Returns `{error: "error reason"}` or `{success: "new_stream_key"}`
 
 
 
@@ -203,7 +203,7 @@ Get a list of the named users VODs
 
 **Response**: Returns an array of VODs inside a JSON object with the format `{"vods": [{"name":"yote.mp4"},{"name":"yeet.mp4"}] }`
 
-**Notes**: VODs are always available at http://domain.com/publicEndpoint/username/filename.mp4
+**Notes**: VODs are always available at http://domain/publicEndpoint/username/filename
 
 
 
@@ -217,9 +217,9 @@ Get information about the specified user.
 
 **Parameters**: user
 
-**Response**: Returns a JSON object with available information about the user. If the user is authenticated and searching for their own information, will return all available information. Otherwise it will return only the stream title and bio. In the case of searching for a user that does not exist, the returned object will contain only the username searched for.
+**Response**: Returns a JSON object with available information about the user. If the user is authenticated and searching for their own information, will return all available information. Otherwise it will return only the stream title, bio, and whether the stream is live. In the case of searching for a user that does not exist, the returned object will contain only the username searched for.
 
-**Example**: `{username: "foo", title: "bar", about: "This is an example bio"}`
+**Example**: `{username: "foo", title: "bar", about: "This is an example bio", live: 0}`
 
 
 
@@ -235,4 +235,4 @@ Returns the current stream key for the authenticated user.
 
 **Response**: returns a JSON object with the stream key
 
-**Example**: `{"stream_key": "abcdefghijklmno12345"}` or `{"error":"error reason"}`
+**Example**: `{stream_key: "abcdefghijklmno12345"}` or `{error:"error reason"}`

@@ -33,8 +33,7 @@ Then start the server.
 npm run start
 ```
 
-It is reccomended that you run Satyr behind a TLS terminating reverse proxy like nginx. An example configuration can be found in CONFIGURATION.md
-An example systemd service is provided at install/satyr.service. It assumes you've installed satyr into /opt/satyr, and created a satyr user with the home directory /var/lib/satyr for the purpose of running the service.
+It is reccomended that you run Satyr behind a TLS terminating reverse proxy like nginx. An example configuration can be found at install/satyr.nginx. An example systemd service is provided at install/satyr.service. It assumes you've installed satyr into /opt/satyr, and created a satyr user with the home directory /var/lib/satyr for the purpose of running the service.
 
 ## Updating Satyr
 Updating should be as simple as pulling the latest code and dependencies, then restarting the server.
