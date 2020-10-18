@@ -168,6 +168,7 @@ async function initAPI() {
 	app.get('/api/instance/config', (req, res) => {
 		res.json({
 			rtmp: {
+				cluster: config['rtmp']['cluster'],
 				port: config['rtmp']['port'],
 				ping_timeout: config['rtmp']['ping_timeout']
 			},
