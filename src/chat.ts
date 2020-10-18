@@ -4,9 +4,11 @@ import {io} from "./http";
 import * as irc from "irc";
 import * as discord from "discord.js";
 import * as twitch from "dank-twitch-irc";
+import * as xmpp from "simple-xmpp";
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 var ircClient;
-var xmppClient;
+var xmppIgnore: Array<string> = [];
 var twitchClient;
 var twitchArr: Array<string> = [];
 var discordClient;
@@ -51,7 +53,24 @@ async function init() {
 		});
 	}
 	if(config['chat']['xmpp']['enabled']){
-		
+		xmpp.on('online', (data) => {
+			console.log("XMPP Client Ready");
+		});
+		xmpp.on('groupchat', function(conference, from, message, stamp) {
+			if(xmppIgnore.findIndex((e) => { return e === conference }) !== -1) return false;
+			if(from === config['chat']['xmpp']['nickname']) return false;
+			console.log(from+'\n'+conference+'\n'+message+'\n'+stamp);
+			var lu = getUsr(conference, "xmpp");
+			for(var i=0;i<lu.length;i++){
+				sendAll(lu[i], [from, message], "xmpp")
+			}
+		});
+		xmpp.connect({
+			jid: config['chat']['xmpp']['jid'],
+			password: config['chat']['xmpp']['password'],
+			host: config['chat']['xmpp']['server'],
+			port: config['chat']['xmpp']['port']
+		});
 	}
 	if(config['chat']['twitch']['enabled']){
 		twitchClient = new twitch.ChatClient({
@@ -96,12 +115,14 @@ async function updateInteg() {
 		chatIntegration = [];
 		if(config['chat']['irc']['enabled']) updateIRCChan();
 		if(config['chat']['twitch']['enabled']) updateTwitchChan();
+		if(config['chat']['xmpp']['enabled']) updateXmppChan();
 		return;
 	}
 	if(liveUsers.length === 1) {
 		chatIntegration = await db.query('SELECT * FROM chat_integration WHERE username='+db.raw.escape(liveUsers[0]['username']));
 		if(config['chat']['irc']['enabled']) updateIRCChan();
 		if(config['chat']['twitch']['enabled']) updateTwitchChan();
+		if(config['chat']['xmpp']['enabled']) updateXmppChan();
 		return;
 	}
 	var qs: string;
@@ -112,6 +133,7 @@ async function updateInteg() {
 	chatIntegration = await db.query('SELECT * FROM chat_integration WHERE username='+qs);
 	if(config['chat']['irc']['enabled']) updateIRCChan();
 	if(config['chat']['twitch']['enabled']) updateTwitchChan();
+	if(config['chat']['xmpp']['enabled']) updateXmppChan();
 }
 
 async function sendAll(user: string, msg: Array<string>, src: string) {
@@ -126,7 +148,7 @@ async function sendAll(user: string, msg: Array<string>, src: string) {
 	if(src !== "irc") sendIRC(getCh(user, "irc"), '['+src.toUpperCase()+']'+msg[0]+': '+msg[1]);
 	if(src !== "twitch") sendTwitch(getCh(user, "twitch"), '['+src.toUpperCase()+']'+msg[0]+': '+msg[1]);
 	if(src !== "discord") sendDiscord(getCh(user, "discord"), '['+src.toUpperCase()+']'+msg[0]+': '+msg[1]);
-	//if(src !== "xmpp") sendXMPP();
+	if(src !== "xmpp") sendXMPP(getCh(user, "xmpp"), '['+src.toUpperCase()+']'+msg[0]+': '+msg[1]);
 	if(src !== "web") sendWeb(user, ['['+src.toUpperCase()+']'+msg[0], msg[1]]);
 }
 
@@ -146,6 +168,7 @@ async function sendDiscord(channel: string, msg: string) {
 async function sendXMPP(channel: string, msg: string) {
 	if(!config['chat']['xmpp']['enabled']) return;
 	if(channel === null) return;
+	xmpp.send(channel, msg, true);
 }
 
 async function sendTwitch(channel: string, msg: string) {
@@ -250,6 +273,26 @@ async function normalizeDiscordMsg(msg): Promise<string>{
 	//fuck me this better work
 
 	return nmsg;
+}
+
+function xmppJoin(room: string): void{
+	var stanza = new xmpp.Element('presence', {"to": room+'/'+config['chat']['xmpp']['nickname']}).c('x', { xmlns: 'http://jabber.org/protocol/muc' }).c('history', { maxstanzas: 0, seconds: 1});
+	xmpp.conn.send(stanza);
+	xmppIgnore = xmppIgnore.concat([room]);
+	xmpp.join(room+'/'+config['chat']['xmpp']['nickname']);
+	sleep(4000).then(() => {
+		xmppIgnore = xmppIgnore.filter((item) => {
+			return item !== room;
+		});
+	});
+}
+
+function updateXmppChan(): void{
+	//simple-xmpp will ignore duplicate joins by itself so we can join repeatedly
+	for(var i=0;i<chatIntegration.length;i++){
+		if(chatIntegration[i]['xmpp'].trim() !== "" && chatIntegration[i]['xmpp'] !== null) xmppJoin(chatIntegration[i]['xmpp']);
+	}
+	//we can't really leave channels so I'll come back to that.
 }
 
 export { init, sendAll };

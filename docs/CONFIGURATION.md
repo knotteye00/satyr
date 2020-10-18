@@ -44,8 +44,8 @@ crypto:
 # if you don't understand the implications, don't change this
 
 chat:
-# the following settings are for chat mirroring bots
-# users will still need to choose which channel to mirror
+# the following settings are for chat bridging bots
+# users will still need to choose which channel to bridge
 # for their chat at /profile/chat
   irc:
     enabled: true
@@ -74,6 +74,21 @@ chat:
 # access token for the twitch chat bot
 # this is not the account password, you will need to generate a token here:
 # https://twitchapps.com/tmi/
+
+  xmpp:
+    enabled: true
+# enable xmpp
+    server: '404.city'
+    port: 5222
+    jid: 'satyr-dev@404.city'
+    password: 'abcde'
+# connection settings for the bot
+    nickname: 'SatyrChat
+# the nickname the bot will join MUCs with
+
+# note that for the best experience you should set the default number of history messages to 0 for the MUC
+# The bot will attempt to request 0 history messages anyway, and will also attempt to ignore any history messages it receives
+# but both of these things are unreliable
 ```
 
 ### Web Frontend
