@@ -4,14 +4,14 @@ A more detailed walkthrough.
 ### System Dependencies
 Install ffmpeg(>= 4.2.1) and mysql through your distribution's package manager.
 See [this page](https://nodejs.org/en/download/package-manager/) for instructions on installing node v10.
-If the version in your distro's package manager is different, you can install 'n' through npm to manage node versions.
+If the version in your distro's package manager is different, you can install [n](https://www.npmjs.com/package/n) through npm to manage node versions.
 
 ### Installing Satyr
 Before starting, you should create a system user to run the satyr service.
 
 Clone the repository and change to the directory
 ```bash
-git clone https://gitlab.com/knotteye/satyr.git
+git clone https://pond.waldn.net/git/knotteye/satyr.git
 cd satyr
 ```
 Install nodejs dependencies

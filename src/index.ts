@@ -10,7 +10,7 @@ async function run() {
 	await initDB();
 	await clean();
 	await initHTTP();
-	config['rtmp']['cluster'] ? execFile(process.cwd()+'/node_modules/.bin/ts-node' [process.cwd()+'src/cluster.ts']) : await initRTMP();
+	config['rtmp']['cluster'] ? execFile(process.cwd()+'/node_modules/.bin/ts-node', [process.cwd()+'/src/cluster.ts']) : await initRTMP();
 	await initChat();
 	console.log(`Satyr v${config['satyr']['version']} ready`);
 }

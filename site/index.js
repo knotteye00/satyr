@@ -1,5 +1,7 @@
-async function render(path){
+async function render(path, s){
 	var context = await getContext();
+	if(!s)
+		history.pushState({}, context.sitename, location.protocol+'//'+location.host+path);
 	switch(path){
 		//nothing but context
 		case (path.match(/^\/about\/?$/) || {}).input: 
@@ -80,6 +82,7 @@ async function render(path){
 			if(!config.title){document.body.innerHTML = nunjucks.render('404.njk', context); break;}
 			document.body.innerHTML = nunjucks.render('user.njk', Object.assign({about: config.about, title: config.title, username: config.username}, context));
 			modifyLinks();
+			startVideo();
 			break;
 		case (path.match(/^\/vods\/.+\/manage\/?$/) || {}).input: // /vods/:user/manage
 			var usr = path.substring(6, (path.length - 7));
@@ -103,12 +106,19 @@ async function render(path){
 		case "":
 			render('/users/live');
 			break;	
+		case "/index.html":
+			render('/users/live');
+			break;
 		//404
 		default:
 			document.body.innerHTML = nunjucks.render('404.njk', context);
 			modifyLinks();
 	}
 }
+
+window.addEventListener('popstate', (event) => {
+	render(document.location.pathname, true);
+});
 
 async function getContext(){
 	var info = JSON.parse(await makeRequest('GET', '/api/instance/info'));
@@ -167,4 +177,43 @@ function modifyLinks() {
 function internalLink(path){
 	this.render(path);
 	return false;
+}
+
+//start dash.js
+async function startVideo(){
+	//var url = "/live/{{username}}/index.mpd";
+  	//var player = dashjs.MediaPlayer().create();
+  	//player.initialize(document.querySelector("#videoPlayer"), url, true);
+  	//console.log('called startvideo');
+  	while(true){
+		if(!document.querySelector('#videoPlayer'))
+			break;
+
+	    if(window.location.pathname.substring(window.location.pathname.length - 1) !== '/'){
+			var url = "/api/"+window.location.pathname.substring(7)+"/config";
+			console.log(url)
+			var xhr = JSON.parse(await makeRequest("GET", url));
+			if(xhr.live){
+				var player = dashjs.MediaPlayer().create();
+				player.initialize(document.querySelector("#videoPlayer"), url, true);
+				break;
+			}
+		}
+
+		else{
+			var url = "/api/"+window.location.pathname.substring(7, window.location.pathname.length - 1)+"/config";
+			console.log(url)
+			var xhr = JSON.parse(await makeRequest("GET", url));
+			if(xhr.live){
+				var player = dashjs.MediaPlayer().create();
+				player.initialize(document.querySelector("#videoPlayer"), url, true);
+				break;
+			}
+		}
+		await sleep(60000);
+	}
+}
+
+function sleep(ms) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }

@@ -32,6 +32,7 @@ Configuration of the instance relating to media
 ```
 {
 	rtmp: {
+		cluster: false,
 		port: 1935,
 		ping_timeout: 60
 	},

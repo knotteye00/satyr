@@ -30,6 +30,7 @@ const config: Object = {
 	   insecureAuth: false,
 	   debug: false }, localconfig['database']),
 	rtmp: Object.assign({
+	  cluster: false,
 	  port: 1935,
 	  chunk_size: 6000,
 	  gop_cache: true,
@@ -75,8 +76,9 @@ const config: Object = {
 			enabled: false,
 			server: null,
 			port: 5222,
-			nickname: 'SatyrChat',
-			username: 'SatyrChat'
+			jid: null,
+			password: null,
+			nickname: 'SatyrChat'
 		}, localconfig['chat']['xmpp']),
 
 		twitch: Object.assign({

@@ -86,7 +86,7 @@ async function getConfig(username: string, all?: boolean): Promise<object>{
 	if(all) {
 		let users = await db.query('SELECT stream_key,record_flag FROM users WHERE username='+db.raw.escape(username));
 		if(users[0]) Object.assign(t, users[0]);
-		let usermeta = await db.query('SELECT title,about FROM user_meta WHERE username='+db.raw.escape(username));
+		let usermeta = await db.query('SELECT title,about,live FROM user_meta WHERE username='+db.raw.escape(username));
 		if(usermeta[0]) Object.assign(t, usermeta[0]);
 		let ci = await db.query('SELECT irc,xmpp,twitch,discord FROM chat_integration WHERE username='+db.raw.escape(username));
 		if(ci[0]) Object.assign(t, ci[0]);
@@ -94,7 +94,7 @@ async function getConfig(username: string, all?: boolean): Promise<object>{
 		if(tw[0]) t['twitch_mirror'] = Object.assign({}, tw[0]);
 	}
 	else {
-		let um = await db.query('SELECT title,about FROM user_meta WHERE username='+db.raw.escape(username));
+		let um = await db.query('SELECT title,about,live FROM user_meta WHERE username='+db.raw.escape(username));
 		if(um[0]) Object.assign(t, um[0]);
 	}
 	return t;

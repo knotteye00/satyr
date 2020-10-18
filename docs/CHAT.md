@@ -3,7 +3,7 @@ This is not a guide to using the webchat, this a reference point for writing cli
 
 Satyr's webchat is based on [socket.io](https://socket.io/), you can find clients for [Java](https://github.com/socketio/socket.io-client-java), [C++](https://github.com/socketio/socket.io-client-cpp), [Swift](https://github.com/socketio/socket.io-client-swift), [Dart](https://github.com/rikulo/socket.io-client-dart), and probably more.
 
-Socket.IO is loosely reminiscent of IRC in that you will receive events from the server and sent events to it. The following is a list of incoming and outgoing events you will need to handle or send. If you would like to see examples, templates/chat.html is implementation used in the webclient by satyr.
+Socket.IO is loosely reminiscent of IRC in that you will receive events from the server and sent events to it. The following is a list of incoming and outgoing events you will need to handle or send. If you would like to see examples, templates/chat.html is the implementation used in the webclient by satyr.
 
 # Incoming Events
 These are events you will recieve from the server that need to be handled in some way.
@@ -53,12 +53,12 @@ This is a request to set the client's nickname. The data attached to a NICK even
 	password: "the optional password"
 }
 ```
-During the initial connect of the client, the server will check for the "Authorization" cookie. If the cookie is a valid, signed JWT, the client will be assigned the nickname of the user that cookie belongs to. If it doesn't exist or is invalid, the client will be assigned a nickname of the form Guest+some integer.
+During the initial connect of the client, the server will check for the "Authorization" cookie. If the cookie is a valid, signed JWT the client will be assigned the nickname of the user that cookie belongs to. If it doesn't exist or is invalid, the client will be assigned a nickname of the form Guest+some integer.
 
 The server will send an alert notifying the client of either the nickname change, or some error.
 
 ## MSG
-This is a chat message to send to room. It should be a JSON object in the following format:
+This is a chat message to send to a room. It should be a JSON object in the following format:
 ```
 {
 	room: "the room to send the messag to",
@@ -117,10 +117,10 @@ A request to unban an IP address. It can only be done by the owner of the room. 
 
 # Final Notes
 
-Sending more than 10 messages a second will cause the server to kick your client. If kicked this way 3 times, the client will be banned for 20 minutes.
+Sending more than 10 messages per second will cause the server to kick your client. If kicked this way 3 times, the client will be banned for 20 minutes.
 
 Kicked or banned users will not be notified of this through an event.
 
-The server *will* send your own MSG events back to you, you will need to parse them out if you want to append them immediately.
+The server *will* send your own MSG events back to you, you will need to parse them out if you want to display them immediately.
 
 Clients who successfully authenticate as a registered user, through either a password or a signed JWT, can ignore nickname collision and have as many connections as they wish.
