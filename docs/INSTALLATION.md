@@ -11,7 +11,7 @@ Before starting, you should create a system user to run the satyr service.
 
 Clone the repository and change to the directory
 ```bash
-git clone https://gitlab.com/knotteye/satyr.git
+git clone https://pond.waldn.net/git/knotteye/satyr.git
 cd satyr
 ```
 Install nodejs dependencies

@@ -4,7 +4,7 @@ System dependencies: A stable version of node>=10, mysql3 (or a compatible imple
 
 ### Setup Instructions
 ```bash
-git clone https://gitlab.com/knotteye/satyr.git
+git clone https://pond.waldn.net/git/knotteye/satyr.git
 cd satyr
 npm install
 npm run setup
