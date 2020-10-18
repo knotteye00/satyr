@@ -9,6 +9,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 var ircClient;
 var xmppIgnore: Array<string> = [];
+var xmppJoined: Array<string> = [];
 var twitchClient;
 var twitchArr: Array<string> = [];
 var discordClient;
@@ -276,10 +277,12 @@ async function normalizeDiscordMsg(msg): Promise<string>{
 }
 
 function xmppJoin(room: string): void{
-	var stanza = new xmpp.Element('presence', {"to": room+'/'+config['chat']['xmpp']['nickname']}).c('x', { xmlns: 'http://jabber.org/protocol/muc' }).c('history', { maxstanzas: 0, seconds: 1});
+	if(xmppJoined.findIndex((e) => { return e === room }) !== -1) return;
+	var stanza = new xmpp.Element('presence', {"to": room+'/'+config['chat']['xmpp']['nickname']}).c('x', { xmlns: 'http://jabber.org/protocol/muc' }).c('history', { maxstanzas: 0, seconds: 0});
 	xmpp.conn.send(stanza);
 	xmppIgnore = xmppIgnore.concat([room]);
 	xmpp.join(room+'/'+config['chat']['xmpp']['nickname']);
+	xmppJoined = xmppJoined.concat([room]);
 	sleep(4000).then(() => {
 		xmppIgnore = xmppIgnore.filter((item) => {
 			return item !== room;
@@ -288,7 +291,6 @@ function xmppJoin(room: string): void{
 }
 
 function updateXmppChan(): void{
-	//simple-xmpp will ignore duplicate joins by itself so we can join repeatedly
 	for(var i=0;i<chatIntegration.length;i++){
 		if(chatIntegration[i]['xmpp'].trim() !== "" && chatIntegration[i]['xmpp'] !== null) xmppJoin(chatIntegration[i]['xmpp']);
 	}
