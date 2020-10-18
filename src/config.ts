@@ -30,6 +30,7 @@ const config: Object = {
 	   insecureAuth: false,
 	   debug: false }, localconfig['database']),
 	rtmp: Object.assign({
+	  cluster: false,
 	  port: 1935,
 	  chunk_size: 6000,
 	  gop_cache: true,

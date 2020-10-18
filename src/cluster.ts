@@ -133,14 +133,14 @@ if (cluster.isMaster) {
 				db.query('update user_meta set live=true where username=\''+results[0].username+'\' limit 1');
 				db.query('SELECT twitch_key,enabled from twitch_mirror where username='+db.raw.escape(results[0].username)+' limit 1').then(async (tm) => {
 					if(!tm[0]['enabled'] || !config['twitch_mirror']['enabled'] || !config['twitch_mirror']['ingest']) return;
-					console.log('[NodeMediaServer] Mirroring to twitch for stream:',id)
+					console.log(`[RTMP Cluster WORKER ${process.pid}] Mirroring to twitch for stream: ${id}`)
 					execFile(config['media']['ffmpeg'], ['-loglevel', 'fatal', '-i', 'rtmp://127.0.0.1:'+wPort+'/'+config['media']['privateEndpoint']+'/'+key, '-vcodec', 'copy', '-acodec', 'copy', '-f', 'flv', config['twitch_mirror']['ingest']+tm[0]['twitch_key']], {
 						detached: true,
 						stdio : 'inherit',
 						maxBuffer: Infinity
 					}).unref();
 				});
-				console.log('[NodeMediaServer] Stream key ok for stream:',id);
+				console.log(`[RTMP Cluster WORKER ${process.pid}] Stream key ok for stream: ${id}`);
 				console.log(`[RTMP Cluster WORKER ${process.pid}] Stream key ok for stream: ${id}`);
 				//notify master process that we're handling the stream for this user
 				process.send({type: 'handle-publish', name:results[0].username});
@@ -171,14 +171,14 @@ if (cluster.isMaster) {
 		let key: string = StreamPath.split("/")[2];
 		//correctly formatted urls again
 		if (StreamPath.split("/").length !== 3){
-			console.log("[NodeMediaServer] Malformed URL, closing connection for stream:",id);
+			console.log(`[RTMP Cluster WORKER ${process.pid}] Malformed URL, closing connection for stream: ${id}`);
 			session.reject();
 			return false;
 		}
 		//localhost can play from whatever endpoint
 		//other clients must use private endpoint
 		if(app !== config['media']['publicEndpoint'] && !session.isLocal) {
-			console.log("[NodeMediaServer] Non-local Play from private endpoint, rejecting client:",id);
+			console.log(`[RTMP Cluster WORKER ${process.pid}] Non-local Play from private endpoint, rejecting client: ${id}`);
 			session.reject();
 			return false;
 		}

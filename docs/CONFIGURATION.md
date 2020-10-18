@@ -7,10 +7,22 @@ Some values you might want to change are
 satyr:
   registration: true
 # allow new users to register
+  port: 8000
+# the port to serve http on
 
 http:
   hsts: true
 # enable strict transport security
+
+rtmp:
+  port: 1935
+# change the port to serve rtmp on
+  cluster: false
+# enable clustering for the RTMP server
+# clustering is an attempt to take better advantage of multi threaded systems in spite of node.js being single-threaded
+# satyr will spawn one RTMP Worker per CPU core, and round-robin incoming connections between workers
+# If you turn this on, satyr will no longer be able to reliably serve RTMP streams to clients
+# Your users will have to use DASH instead
 
 media:
   record: true
@@ -36,7 +48,7 @@ transcode:
 # https://trac.ffmpeg.org/wiki/HWAccelIntro is a good place to start
 
 # having more than 4-5 variants will start giving diminishing returns on stream quality for cpu load
-# if you can't afford to generate at least 3 variants, it's reccomended to leave adaptive streaming off
+# if you can't afford to generate at least 3 variants, it's recommended to leave adaptive streaming off
 
 crypto:
   saltRounds: 12
@@ -49,7 +61,6 @@ chat:
 # for their chat at /profile/chat
   irc:
     enabled: true
-# enable irc mirroring
     server: chat.freenode.net
     port: 6697
     tls: true
@@ -61,7 +72,6 @@ chat:
 
   discord:
     enabled: true
-# enabled discord integration
     token: abcdefghijklmnopqrstuvwxyz
 # the access token for the bot
 # note that the bot will mirror every channel matching the name the user has chosen
@@ -77,10 +87,9 @@ chat:
 
   xmpp:
     enabled: true
-# enable xmpp
-    server: '404.city'
+    server: 'example.com'
     port: 5222
-    jid: 'satyr-dev@404.city'
+    jid: 'exampleBot@example.com'
     password: 'abcde'
 # connection settings for the bot
     nickname: 'SatyrChat

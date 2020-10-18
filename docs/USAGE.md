@@ -1,7 +1,7 @@
 ## Satyr Usage
 
 ### Administration
-Satyr needs access to port 1935 for RTMP streams, and will serve HTTP on port 8000. The ports can be changed with follow config lines.
+Satyr needs access to port 1935 for RTMP streams, and will serve HTTP on port 8000. See CONFIGURATION.md for details on changing this.
 
 For HTTPS, run a reverse proxy in front of satyr. An example nginx block is shown below.
 ```
