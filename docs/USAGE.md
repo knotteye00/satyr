@@ -18,8 +18,7 @@ It's not very complex. The following commands are available:
 ### Users
 
 #### Accounts
-If registration is open, users can register at example.tld/registration, and set some options such as whether to record VODs and a stream title on /profile
-Stream keys can be changed at example.tld/changesk, and passwords at /changepwd
+If registration is open, users can register at your.site.com/registration, and set some options such as whether to record VODs and a stream title on /profile.
 
 #### Chat
 Chat is based on Socket.IO, and can be accessed through the webclient at /chat.

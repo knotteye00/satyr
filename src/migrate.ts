@@ -4,6 +4,6 @@ import { config } from "./config";
 
 async function run() {
 	await initDB();
-	await clean(false);
+	await clean();
 }
 run().then(() => {process.exit()});

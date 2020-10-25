@@ -92,7 +92,7 @@ chat:
     jid: 'exampleBot@example.com'
     password: 'abcde'
 # connection settings for the bot
-    nickname: 'SatyrChat
+    nickname: 'SatyrChat'
 # the nickname the bot will join MUCs with
 
 # note that for the best experience you should set the default number of history messages to 0 for the MUC
