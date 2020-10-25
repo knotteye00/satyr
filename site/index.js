@@ -196,6 +196,12 @@ async function initPlayer(usr) {
   // Listen for error events.
   player.addEventListener('error', onErrorEvent);
 
+  video.addEventListener('play', () => {
+	document.getElementById('playbtn').style.visibility = 'hidden';
+  });
+  video.addEventListener('pause', () => {
+	document.getElementById('playbtn').style.visibility = 'visible';
+  });
   // Try to load a manifest.
   // This is an asynchronous process.
   try {

@@ -3,7 +3,7 @@
 <script src="/shaka-player.compiled.js"></script>
 <script>
 shakaPolyFilled = false;
-const manifestUri = document.location.protocol+'//'+document.location.host+'/live/{{ username }}/index.mpd';
+var manifestUri = "https://spacecowboy.cc/live/knotteye/index.mpd"//document.location.protocol+'//'+document.location.host+'/live/{{ username }}/index.mpd';
 async function initPlayer() {
   if(!shakaPolyFilled){
   	shaka.polyfill.installAll();
@@ -15,6 +15,12 @@ async function initPlayer() {
   // Listen for error events.
   player.addEventListener('error', onErrorEvent);
 
+  video.addEventListener('play', () => {
+	  document.getElementById('playbtn').style.visibility = 'hidden';
+  });
+  video.addEventListener('pause', () => {
+	  document.getElementById('playbtn').style.visibility = 'visible';
+  });
   // Try to load a manifest.
   // This is an asynchronous process.
   try {
@@ -51,7 +57,7 @@ function newPopup(url) {
 	<span style="float: left;font-size: large;"><a href="/live/{{ username }}/index.mpd">{{ username }}</a> | {{ title | escape }}</b></span><span style="float: right;font-size: large;"> Links | <a href="rtmp://{{ domain }}/live/{{ username }}">Watch</a> <a href="JavaScript:newPopup('/chat?room={{ username }}');">Chat</a> <a href="/vods/{{ username }}">VODs</a></span>
 	<div id="jscontainer">
 		<div id="jschild" style="width: 70%;height: 100%;position: relative;">
-			<image src="/play.svg" alt="Play Stream" style="width:100%;height:100%;width: 950px;height: 534px;position: absolute;"></image>
+			<image id="playbtn" src="/play.svg" alt="Play Stream" style="width:100%;height:100%;width: 950px;height: 534px;position: absolute;" onclick="document.getElementById('video').paused ? document.getElementById('video').play() : document.getElementById('video')	.pause();"></image>
 			<video id="video" style="width:100%;height:100%;width: 950px;height: 534px;background-color: rgb(0, 0, 0);" poster="/thumbnail.jpg" autoplay onclick="this.paused ? this.play() : this.pause();"></video>
 		</div>
 		<div id="jschild" class="webchat" style="width: 30%;height: 100%;position: relative;">
