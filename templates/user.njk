@@ -1,47 +1,50 @@
 {% extends "base.njk" %}
 {% block head %}
-  <!--<script src="/videojs/video.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="/videojs/video-js.min.css">-->
-  <script src="/dashjs/dash.all.min.js"></script>
-  <script>
-	async function startVideo(){
-	//var url = "/live/{{username}}/index.mpd";
-  	//var player = dashjs.MediaPlayer().create();
-  	//player.initialize(document.querySelector("#videoPlayer"), url, true);
-  	//console.log('called startvideo');
-  	while(true){
-		if(!document.querySelector('#videoPlayer'))
-			break;
+<script src="/shaka-player.compiled.js"></script>
+<script>
+shakaPolyFilled = false;
+var manifestUri = document.location.protocol+'//'+document.location.host+'/live/{{ username }}/index.mpd';
+async function initPlayer() {
+  if(!shakaPolyFilled){
+  	shaka.polyfill.installAll();
+  	shakaPolyFilled = true;
+  }
+  // Create a Player instance.
+  const video = document.getElementById('video');
+  const player = new shaka.Player(video);
+  // Listen for error events.
+  player.addEventListener('error', onErrorEvent);
 
-	    if(window.location.pathname.substring(window.location.pathname.length - 1) !== '/'){
-			var url = "/api/"+window.location.pathname.substring(7)+"/config";
-			console.log(url)
-			var xhr = JSON.parse(await makeRequest("GET", url));
-			if(xhr.live){
-				var player = dashjs.MediaPlayer().create();
-				player.initialize(document.querySelector("#videoPlayer"), url, true);
-				break;
-			}
-		}
-
-		else{
-			var url = "/api/"+window.location.pathname.substring(7, window.location.pathname.length - 1)+"/config";
-			console.log(url)
-			var xhr = JSON.parse(await makeRequest("GET", url));
-			if(xhr.live){
-				var player = dashjs.MediaPlayer().create();
-				player.initialize(document.querySelector("#videoPlayer"), url, true);
-				break;
-			}
-		}
-		await sleep(60000);
-	}
+  video.addEventListener('play', () => {
+	  document.getElementById('playbtn').style.visibility = 'hidden';
+  });
+  video.addEventListener('pause', () => {
+	  document.getElementById('playbtn').style.visibility = 'visible';
+  });
+  // Try to load a manifest.
+  // This is an asynchronous process.
+  try {
+	await player.load(manifestUri);
+	// This runs if the asynchronous load is successful.
+    console.log('The video has now been loaded!');
+  } catch (e) {
+    // onError is executed if the asynchronous load fails.
+    onError(e);
+  }
 }
 
-function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
+function onErrorEvent(event) {
+  // Extract the shaka.util.Error object from the event.
+  onError(event.detail);
 }
-  </script>
+
+function onError(error) {
+  // Log the error.
+  console.error('Error code', error.code, 'object', error);
+}
+
+document.addEventListener('DOMContentLoaded', initPlayer);
+</script>
 {% endblock %}
 {% block content %}
 <script>
@@ -53,13 +56,9 @@ function newPopup(url) {
   </br>
 	<span style="float: left;font-size: large;"><a href="/live/{{ username }}/index.mpd">{{ username }}</a> | {{ title | escape }}</b></span><span style="float: right;font-size: large;"> Links | <a href="rtmp://{{ domain }}/live/{{ username }}">Watch</a> <a href="JavaScript:newPopup('/chat?room={{ username }}');">Chat</a> <a href="/vods/{{ username }}">VODs</a></span>
 	<div id="jscontainer">
-		<div id="jschild" style="width: 70%;height: 100%;">
-			<!--<video controls poster="/thumbnail.jpg" class="video-js vjs-default-skin" id="live-video" style="width:100%;height:100%;min-height: 500px;"></video>-->
-			<video id="videoPlayer" style="width:100%;height:100%;width: 950px;height: 534px;background-color: rgb(0, 0, 0);" poster="/thumbnail.jpg" autoplay muted></video>
-
-			<!--this spits errors fucking constantly after it tries to reload a video that's already running.. I dunno if it's bad or causing problems so let's just push it to develop and wait for issues!-->
-			<!--it plays the stream without reloading the page tho lol-->
-			<script>startVideo()</script>
+		<div id="jschild" style="width: 70%;height: 100%;position: relative;">
+			<image id="playbtn" src="/play.svg" alt="Play Stream" style="width:100%;height:100%;width: 950px;height: 534px;position: absolute;" onclick="document.getElementById('video').paused ? document.getElementById('video').play() : document.getElementById('video')	.pause();"></image>
+			<video id="video" style="width:100%;height:100%;width: 950px;height: 534px;background-color: rgb(0, 0, 0);" poster="/thumbnail.jpg" autoplay onclick="this.paused ? this.play() : this.pause();"></video>
 		</div>
 		<div id="jschild" class="webchat" style="width: 30%;height: 100%;position: relative;">
 			<iframe src="/chat?room={{ username }}" frameborder="0" style="width: 100%;height: 100%; min-height: 534px;" allowfullscreen></iframe>
@@ -68,21 +67,4 @@ function newPopup(url) {
   </br>
     <noscript>The webclients for the stream and the chat require javascript, but feel free to use the direct links above!</br></br></noscript>
     {{ about | escape }}
-  <!--<script>
-    window.HELP_IMPROVE_VIDEOJS = false;
-    var player = videojs('live-video', {
-      html: {
-        nativeCaptions: false,
-      },
-    });
-    player.ready(function() {
-      player.on("error", () => {
-        document.querySelector(".vjs-modal-dialog-content").textContent = "The stream is currently offline.";
-      });
-      player.src({
-        src: '/live/{{ username }}/index.mpd',
-        type: 'application/dash+xml'
-      });
-    })
-  </script>-->
 {% endblock %}
