@@ -3,7 +3,7 @@
 <script src="/shaka-player.compiled.js"></script>
 <script>
 shakaPolyFilled = false;
-var manifestUri = "https://spacecowboy.cc/live/knotteye/index.mpd"//document.location.protocol+'//'+document.location.host+'/live/{{ username }}/index.mpd';
+var manifestUri = document.location.protocol+'//'+document.location.host+'/live/{{ username }}/index.mpd';
 async function initPlayer() {
   if(!shakaPolyFilled){
   	shaka.polyfill.installAll();
