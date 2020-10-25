@@ -69,4 +69,4 @@ twitch_mirror:
   enabled: false
   # https://stream.twitch.tv/ingests/
   # do not include {stream_key}
-  ingest: 'rtmp://live-ord02.twitch.tv/app/
+  ingest: 'rtmp://live-ord02.twitch.tv/app/'
