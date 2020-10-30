@@ -9,11 +9,8 @@ async function init() {
 		if(tmp.length === 0){
 			console.log('No database version info, running initial migration.');
 			await require('./db/0').run();
-			await bringUpToDate();
 		}
-		else {
-			await bringUpToDate();
-		}
+		await bringUpToDate();
 	}
 	else {
 		console.log('Skipping database version check.');
@@ -34,16 +31,19 @@ async function init() {
 }
 
 async function bringUpToDate(): Promise<void>{
-	var versions: Object[] =  await db.query('select * from db_meta');
-	var scripts: Buffer[] | string[] = readdirSync('./src/db/', {withFileTypes: false});
-	var diff: number = scripts.length - versions.length
-	if(diff === 0){
+	var versions: Object[] =  JSON.parse(JSON.stringify(await db.query('select * from db_meta'))); //ugh, don't ask
+	var scripts: any[] = readdirSync('./src/db/', {withFileTypes: false});
+	if(scripts.length - versions.length === 0){
 		console.log('No migration needed.');
 	} else {
 		console.log('Versions differ, migrating now.');
-		for(let i=0;i<diff;i++){
-			console.log('Migration to version '+Math.floor(scripts.length-(diff-i)));
-			await require('./db/'+scripts[Math.floor(scripts.length-(diff-i))]).run();
+		var diff: string[] = scripts.filter(n => {
+			//we have to use versions.some because {version: 0} === {version: 0} returns false lmao
+			return !versions.some(o => o['version']+''=== n.substring(0, n.length - 3))
+		});
+		for(let i=0;i<diff.length;i++){
+			console.log('Running migration '+diff[i]);
+			await require('./db/'+diff[i]).run();
 		}
 		console.log('Done migrating database.');
 	}
