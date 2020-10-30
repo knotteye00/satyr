@@ -4,7 +4,17 @@ try {
 	var localconfig: Object = parse(read('config/config.yml'));
 	console.log('Config file found.');
 } catch (e) {
-	console.log('No config file found. Exiting.');
+	if(e['reason']) {
+		console.log('Error parsing config on line '+e['mark']['line']+', with reason: '+e['reason']);
+	}
+	else {
+		console.log('Config Error: '+e['code']);
+		switch(e['code']){
+			case 'ENOENT':
+				console.log('Does the file exist?');
+				break;
+		}
+	}
 	process.exit();
 }
 const config: Object = {
