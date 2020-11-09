@@ -32,6 +32,10 @@ transcode:
   #unused right now, will always transcode to dash
   format: dash
 
+hwaccel:
+  # see docs/HWACCEL.md for instructions on configuring hardware acceleration
+  type: null
+
 chat:
 
   irc:

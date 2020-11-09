@@ -38,17 +38,16 @@ transcode:
 # satyr will generate one source quality variant, and the remaining
 # variants will be of incrementally lower quality and bitrate
 
+# having more than 4-5 variants will start giving diminishing returns on stream quality for cpu load
+# if you can't afford to generate at least 3 variants, it's recommended to leave adaptive streaming off
+
   inputflags: ""
 # additional flags to apply to the input during transcoding
   outputflags: ""
 # additional flags to apply to the output during transcoding
 
-# hardware acceleration is a bit difficult to configure programmatically
-# this is a good place to do so for your system
-# https://trac.ffmpeg.org/wiki/HWAccelIntro is a good place to start
-
-# having more than 4-5 variants will start giving diminishing returns on stream quality for cpu load
-# if you can't afford to generate at least 3 variants, it's recommended to leave adaptive streaming off
+hwaccel:
+# See HWACCEL.md for information on configuring hardware acceleration.
 
 crypto:
   saltRounds: 12
