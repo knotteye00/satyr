@@ -1,3 +1,6 @@
+# This repository is a mirror
+And an infrequently updated one at that. Development happens at https://pond.waldn.net/git/knotteye/satyr/, head there to contribute.
+
 ## Satyr: A livestreaming server
 
 System dependencies: A stable version of node>=10, mysql3 (or a compatible implementation such as MariaDB), and ffmpeg >=4.2
